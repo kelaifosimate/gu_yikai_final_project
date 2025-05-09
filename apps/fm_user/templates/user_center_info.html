@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block center_body %}
+
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>User Center</h3>
+            <div class="information clearfix">
+                <a href="/user/myself_information/"><img src="{{ MEDIA_URL }}{{ user.ulogo }}" alt="Profile"></a>
+                <div class="information1 clearfix">
+                    {% if user.ucheck_passOrfail == False %}
+                        <a>Not Verified</a>
+                    {% else %}
+                        <a style="color: cyan">Verified</a>
+                    {% endif %}
+                </div>
+            </div>
+			<ul>
+                <li><a href="{% url "fm_user:info" %}">· Personal Information</a></li>
+                <li><a href="{% url "fm_user:check_user" %}">· ID Verification</a></li>
+                <li><a href="{% url "fm_user:publishers" %}">· List an Item</a></li>
+                <li><a href="{% url "fm_user:changeInformation" %}">· Edit Profile</a></li>
+                <li><a href="{% url "fm_user:changeInPwd" %}">· Change Password</a></li>
+				<li><a href="{% url "fm_user:order" 1 %}">· All Orders</a></li>
+				<li><a href="{% url "fm_user:site" %}" class="active">· Shipping Address</a></li>
+			</ul>
+		</div>
+		<div class="right_content clearfix">
+				<h3 class="common_title2">Shipping Address</h3>
+				<div class="site_con1">
+					<dl>
+                        <dt>Recipient: {{ user.ushou }}</dt>
+                        <dt>Phone: {{ user.uphone }}</dt>
+                        <dt>Current Address: {{ user.uaddress }}</dt>
+{#                        <a href="/user/place_order" style="display: block; width: 80px; height:30px; line-height: 30px; text-align: center;font-size: 13px; " class="info_submit">Submit Order</a>#}
+					</dl>
+				</div>
+				<h3 class="common_title2">Edit Address</h3>
+				<div class="site_con">
+					<form action="{% url "fm_user:site" %}" method="post">
+                        {% csrf_token %}
+						<div class="form_group">
+							<label>Recipient:</label>
+							<input type="text" name="ushou" value="{{ user.ushou }}">
+						</div>
+                        <div class="form_group">
+                            <label>Phone:</label>
+                            <input type="text" name="uphone" value="{{ user.uphone }}">
+                        </div>
+                        <div class="form_group">
+                            <label>Postal Code:</label>
+                            <input type="text" name="uyoubian" value="{{ user.uyoubian }}">
+                        </div>
+                        <div class="form_group form_group2">
+                            <label>Detailed Address:</label>
+                            <textarea class="site_area" name="uaddress" >{{ user.uaddress }}</textarea>
+                        </div>
+						<input type="submit" name="" value="Update Address" class="info_submit">
+					</form>
+				</div>
+		</div>
+	</div>
+
+
+{% endblock center_body %}

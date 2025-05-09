@@ -1,0 +1,181 @@
+{% extends 'fm_goods/base.html' %}
+
+{% block head %}
+    <script type="text/javascript">
+
+{#  Through binding js events to implement increase in total price as product quantity increases #}
+    function plus() {
+        num = parseFloat($('.num_show').val());
+        kucun = parseFloat($('.goods_kucun').html());
+        if(num<=kucun){
+            $('.num_show').val(num+1);
+            $('.num_show').blur();
+        }
+    }
+
+    function minus() {
+        num = parseFloat($('.num_show').val());
+        if(num>1)
+        {
+            $('.num_show').val(num-1);
+            $('.num_show').blur();
+        }
+        else {
+            {# Product quantity cannot be less than 1 #}
+        }
+    }
+
+    $(function () {
+        $('.num_show').blur(function () {
+
+        num = parseInt($('.num_show').val());
+
+        if(num<=1)
+             num = 1;
+
+         kucun = parseInt($('.goods_kucun').text());
+
+         if(num>=kucun)
+             num = kucun;
+
+         price = parseFloat($('#gprice').text());
+         total = num*price;
+         $('.num_show').val(num);
+         $('#gtotal').text(total.toFixed(2)+' yuan');
+
+{#             $('add_cart').attr('href', '/cart/add'+$('gid').val()) #}
+        });
+    });
+    </script>
+
+{% endblock head %}
+
+{% block center_content %}
+	<div class="goods_detail_con clearfix">
+		<div class="goods_detail_pic fl"><img src="{{ MEDIA_URL }}{{ goods.gpic }}" style="width: 350px;height: 350px;"></div>
+
+		<div class="goods_detail_list fr">
+			<h3>{{ goods.gtitle }} (Seller: {{ goods.gunit }})
+                <a href="/user/seller_information/{{ goods.gunit }}" style="font-size:18px;width:100px;height: 50px;background: #00bc6f;text-indent:10px">
+                    <img src="../../static/images/shoper_logo.png" style="width:50px;height: 70px;overflow: hidden;object-fit: cover;" alt="">Contact Seller
+                </a>
+            </h3>
+			<p>{{ goods.gjianjie }}</p>
+			<div class="prize_bar">
+				<span class="show_pirze">¥<em id="gprice">{{ goods.gprice }}</em></span>
+				<span class="show_unit">Inventory: <span class="goods_kucun">{{ goods.gkucun }}</span></span>
+			</div>
+			<div class="goods_num clearfix">
+				<div class="num_name fl">Quantity: </div>
+				<div class="num_add fl">
+					<input type="text" class="num_show fl" value="1">
+					<a href="javascript:plus();" class="add fr">+</a>
+					<a href="javascript:minus();" class="minus fr">-</a>
+				</div>
+			</div>
+			<div class="total">Total: <em id="gtotal">{{ goods.gprice }} yuan</em></div>
+			<div class="operate_btn">
+                {% if request.session.user_name|default:'' != '' %}
+                    <a href="javascript:;" class="buy_btn" id="buy_now">Buy Now</a>
+                {% else %}
+                    <a href="{% url "fm_user:login" %}" class="buy_btn">Buy Now</a>
+                {% endif %}
+                {% if request.session.user_name|default:'' != '' %}
+                    <a href="javascript:;" class="add_cart" id="add_cart">Add to Cart</a>
+                {% else %}
+                    <a href="{% url "fm_user:login" %}" class="add_cart" id="add_cart">Add to Cart</a>
+                {% endif %}
+			</div>
+		</div>
+	</div>
+
+	<div class="main_wrap clearfix">
+		<div class="l_wrap fl clearfix">
+			<div class="new_goods">
+				<h3>New Recommendations</h3>
+				<ul>
+                    {% for goods in news %}
+					<li>
+						<a href="/detail/{{ goods.id }}"><img src="{{ MEDIA_URL }}{{ goods.gpic }}"></a>
+						<h4><a href="/detail/{{ goods.id }}">{{ goods.gtitle }}</a></h4>
+						<div class="prize">¥{{ goods.gprice }}</div>
+					</li>
+                    {%  endfor %}
+                </ul>
+			</div>
+		</div>
+
+		<div class="r_wrap fr clearfix">
+			<ul class="detail_tab clearfix">
+				<li class="active">Product Description</li>
+				<li class="detail_tab_content"><a href="/content/{{ goods.id }}/1/">Comments</a></li>
+			</ul>
+
+			<div class="tab_content">
+				<dl>
+					<dt>Product Details:</dt>
+					<dd>{{ goods.gcontent|safe }}</dd>
+				</dl>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="add_jump"></div>
+
+	<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript">
+    $(document).ready(function(){
+
+        $(".buy_btn").click(function () {
+            num = parseInt($('.num_show').val());
+            $.get('/cart/add{{ goods.id }}_'+num+'/',function (data) {
+                $('#show_count').text(data.count);
+            });
+            location.href = "/cart/";
+
+        });
+
+        $('#add_cart').click(function() {
+
+            var $add_x = $('#add_cart').offset().top;
+            var $add_y = $('#add_cart').offset().left;
+
+            var $to_x = $('#show_count').offset().top;
+            var $to_y = $('#show_count').offset().left;
+
+            $(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'});
+
+            $('#add_cart').click(function() {
+
+    {#            		    First check if logged in #}
+                if ($('.login_btn').text().indexOf('Login') >= 0) {
+                    alert('Please login to purchase');
+                    location.href('/user/login/');
+                    return;
+                }
+
+    {#                        Add to cart animation #}
+                $(".add_jump").stop().animate({
+                        'left': $to_y + 7,
+                        'top': $to_x + 7
+                    },
+                    "fast", function () {
+                        $(".add_jump").fadeOut('fast', function () {
+                            count = $('.num_show').val();
+                            $('#show_count').html
+                            $('#show_count').html(count);
+                    });
+                });
+
+                num = parseInt($('.num_show').val());
+                $.get('/cart/add{{ goods.id }}_'+num+'/',function (data) {
+                    $('#show_count').text(data.count);
+                });
+            });
+        });
+
+    });
+	</script>
+
+{% endblock center_content %}

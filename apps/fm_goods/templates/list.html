@@ -1,0 +1,78 @@
+{% extends 'fm_goods/base.html' %}
+
+{% block center_content %}
+
+	<div class="main_wrap clearfix">
+		<div class="l_wrap fl clearfix">
+			<div class="new_goods">
+				<h3>New Recommendations</h3>
+				<ul>
+                    {% for goods in news %}
+{#                        Two new recommended products #}
+                        <li>
+                            <a href="/{{ goods.id }}"><img src="{{ MEDIA_URL }}{{ goods.gpic }}"></a>
+    						<h4><a href="/{{ goods.id }}">{{ goods.gtitle }}</a></h4>
+    						<div class="prize">¥{{ goods.gprice }}</div>
+                        </li>
+                    {% endfor %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="r_wrap fr clearfix">
+			<div class="sort_bar">
+{#                Note the parameter order in the view function and also all links in url are string type #}
+                <a href="/list{{ typeinfo.id }}_1_1"
+                   {% if sort == '1' %}
+                    class="active"
+                   {% endif %}
+                    >Default</a>
+                <a href="/list{{ typeinfo.id }}_1_2"
+                   {% if sort == '2' %}
+                    class="active"
+                   {% endif %}
+                    >Price</a>
+                <a href="/list{{ typeinfo.id }}_1_3"
+                   {% if sort == '3' %}
+                    class="active"
+                   {% endif %}
+                    >Popularity</a>
+			</div>
+
+			<ul class="goods_type_list clearfix">
+                {%  for g in page %}
+                <li>
+					<a href="/detail/{{ g.id }}/"><img src="{{ MEDIA_URL }}{{ g.gpic }}"></a>
+					<h4><a href="/detail/{{ g.id }}/">{{ g.gtitle }}</a></h4>
+					<div class="operate">
+						<span class="prize">¥{{ g.gprice }}</span>
+						<span class="unit">Seller: {{ g.gunit }}</span>
+						<a href="/cart/add{{ g.id }}_1/" class="add_goods" title="Add to Cart"></a>
+					</div>
+				</li>
+                {% endfor %}
+			</ul>
+
+			<div class="pagenation">
+{#                Check if it's the first page #}
+                {% if page.has_previous %}
+                    <a href="/list{{ typeinfo.id }}_{{ page.previous_page_number }}_{{ sort }}">Previous</a>
+                {% endif %}
+
+                {% for pindex in paginator.page_range %}
+                    {% if pindex == page.number %}
+                        <a href="/list{{ typeinfo.id }}_{{pindex}}_{{ sort }}" class="active">{{ pindex }}</a>
+                    {% else %}
+                        <a href="/list{{ typeinfo.id }}_{{pindex}}_{{ sort }}">{{ pindex }}</a>
+                    {% endif %}
+                {% endfor %}
+
+{#                Check if there's next page #}
+                {% if page.has_next %}
+				<a href="/list{{ typeinfo.id }}_{{ page.next_page_number }}_{{ sort }}">Next ></a>
+                {% endif %}
+			</div>
+		</div>
+	</div>
+
+{% endblock center_content %}

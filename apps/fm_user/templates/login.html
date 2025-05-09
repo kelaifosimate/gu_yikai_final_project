@@ -1,0 +1,103 @@
+{% extends 'base_foot.html' %}
+
+{% block head %}
+<script>
+    $(function () {
+        name_error = false;
+        pwd_error = false;
+        vc_error = false;
+
+        if({{ error_name }}==1){
+            $('.user_error').html('Username error').show();
+        }
+        if({{ error_pwd }}==1){
+            $('.pwd_error').html('Password error').show();
+        }
+        if({{ error_vc }}==1){
+            $('.vc_error').html('Verification code error').show();
+        }
+        $('.name_input').blur(function () {
+            if($('.name_input').val().length=0){
+                $('.user_error').html('Please enter username').show();
+                name_error = false;
+            }else{
+                $('.user_error').hide();
+                name_error = true;
+            }
+        });
+        $('.pass_input').blur(function () {
+            if($('.pass_input').val().length=0){
+                $('.pwd_error').html('Please enter password').show();
+                pwd_error = false;
+            }else{
+                $('.pwd_error').hide();
+                pwd_error = true;
+            }
+        });
+        $('.vc_input').blur(function () {
+            if($('.vc_input').val().length=0){
+                $('.vc_error').html('Please enter verification code').show();
+                vc_error = false;
+            }else{
+                $('.vc_error').hide();
+                vc_error = true;
+            }
+        });
+    })
+</script>
+{% endblock head %}
+
+{% block body %}
+	<div class="login_top clearfix">
+		<a href="{% url "fm_goods:index" %}" class="login_logo"><img src="/static/images/logo_banner2.png" style="width: 300px;height:100px;overflow: hidden;object-fit: cover;"></a>
+	</div>
+
+	<div class="login_form_bg">
+		<div class="login_form_wrap clearfix">
+			<div class="login_banner fl"><img src="../../static/images/timg%5B2%5D.png" alt=""></div>
+			<div class="slogan fl">Find Treasures · Pre-Loved Items</div>
+			<div class="login_form fr">
+				<div class="login_title clearfix">
+					<h1>User Login</h1>
+					<a href="{% url "fm_user:register" %}">Register Now</a>
+				</div>
+				<div class="form_input">
+					<form action="{% url "fm_user:login_handle" %}" method="post">
+                        {% csrf_token %}
+						<input type="text" name="username" class="name_input" value="{{ username }}" placeholder="Please enter username">
+						<div class="user_error">Input error</div>
+						<input type="password" name="pwd" class="pass_input" value="{{ password }}" placeholder="Please enter password">
+{#                        When a cookie is set, the value attribute ensures the value is still visible on the page after refresh #}
+						<div class="pwd_error">Input error</div>
+{#                        Verification code #}
+                        <input type="text" name="vc" class="vc_input" placeholder="Please enter verification code">
+                        <div class="vc_error">Input error</div>
+                        <img id='verifycode' src="/user/verifycode/?1" alt="CheckCode"/>
+                        <span id='verifycodeChange' aria-placeholder="Can't see clearly? Change one"></span>
+						<div class="more_input clearfix">
+							<input type="checkbox" name="jizhu" value="1" checked="checked">
+							<label>Remember username</label>
+							<a href="{% url "fm_user:findpwdView" %}">Forgot password</a>
+						</div>
+						<input type="submit" name="" value="Login" class="input_submit">
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+    $(function(){
+        $('#verifycodeChange').css('cursor','pointer').click(function() {
+            $('#verifycode').attr('src',$('#verifycode').attr('src')+1)
+        });
+    });
+</script>
+{#  Pop-up prompt  #}
+    {% if messages %}
+    <script>
+        {% for msg in messages %}
+            alert('{{ msg.message }}');
+        {% endfor %}
+    </script>
+    {% endif %}
+{% endblock body %}

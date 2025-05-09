@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <script>
+    $(function () {
+        $('.col07').each(function () {
+            count = $(this).prev().text();
+            price = $(this).prev().prev().text();
+            $(this).html(parseFloat(count,2)*parseFloat(price,2)+'£')
+        })
+    })
+    </script>
+
+{% endblock %}
+
+{% block center_body %}
+	<h3 class="common_title">Fill in Return Information</h3>
+
+	<div class="common_list_con clearfix">
+		<div class="site_con">
+					<form action="{% url "fm_user:tuihuo" %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form_group">
+							<label>Item Name:</label>
+							<input type="text" name="title">
+						</div>
+                        <div class="form_group">
+							<label>Recipient Name:</label>
+							<input type="text" name="username">
+						</div>
+                        <div class="form_group">
+							<label>Sender Name:</label>
+							<input type="text" name="username1">
+						</div>
+                        <div class="form_group">
+							<label>ID Number:</label>
+							<input type="text" name="person_number">
+						</div>
+                        <div class="form_group">
+							<label>Order Number:</label>
+							<input type="text" name="order_number">
+						</div>
+                        <div class="form_group">
+                            <label>Courier Service:</label>
+                            <select name="kuaidi">
+                                <option value="Royal Mail">Royal Mail</option>
+                                <option value="DPD">DPD</option>
+                                <option value="Hermes">Hermes</option>
+                                <option value="Parcelforce">Parcelforce</option>
+                                <option value="FedEx">FedEx</option>
+                                <option value="UPS">UPS</option>
+                                <option value="DHL">DHL</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form_group">
+                            <label>Tracking Number:</label>
+                            <input type="text" name="kuaidi_number">
+                        </div>
+                        <div class="form_group">
+                            <label>Delivery Address:</label>
+                            <input type="text" name="address">
+                        </div>
+                        <div class="form_group">
+                            <label>Pickup Address:</label>
+                            <input type="text" name="address1">
+                        </div>
+                        <div class="form_group form_group2">
+                            <label>Return Reason:</label>
+                            <textarea class="site_area" name="text" ></textarea>
+                        </div>
+						<input type="submit" name="" value="Submit" class="info_submit">
+					</form>
+				</div>
+
+	</div>
+{#  Pop-up prompt  #}
+    {% if messages %}
+    <script>
+        {% for msg in messages %}
+            alert('{{ msg.message }}');
+        {% endfor %}
+    </script>
+    {% endif %}
+{% endblock center_body %}

@@ -1,0 +1,86 @@
+{% extends 'base_foot.html' %}
+
+{% block body %}
+    <div class="header_con" id="header_con">
+		<div class="header">
+			<div class="welcome fl">Welcome to Flea Market!</div>
+			<div class="fr">
+{#                Check if already logged in #}
+                {% if request.session.user_name|default:'' != '' %}
+{#                    default filter to check if request.session.user_name is not an empty string, then user login status is true #}
+{#                    that is, when user is logged in, show username #}
+
+{#                    class="login_info fl" #}
+				<div class="login_btn fl">
+                    <img class="img-circle" align="center" src="{{ MEDIA_URL }}{{ user.ulogo }}" alt="avatar"/>
+                    <font color="#ff4500">{{ request.session.user_name }}</font>
+				</div>
+                <div class="login_btn fl">
+                    <span>|</span>
+                    <em><a href="{% url "fm_user:logout" %}">Logout</a></em>
+				</div>
+                {% else %}
+				<div class="login_btn fl">
+					<a href="{% url "fm_user:login" %}">Login</a>
+					<span>|</span>
+					<a href="{% url "fm_user:register" %}">Register</a>
+				</div>
+                {% endif %}
+				<div class="user_link fl">
+					<span>|</span>
+					<a href="{% url "fm_user:info" %}">User Center</a>
+                    <span>|</span>
+					<a href="{% url "fm_user:message" %}">Message Center</a>
+					<span>|</span>
+					<a href="{% url "fm_cart:cart" %}">My Cart</a>
+					<span>|</span>
+					<a href="{% url "fm_user:order" 1 %}">My Orders</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+    <div class="search_bar clearfix">
+		<a href="/" class="logo fl"><img src="/static/images/logo1.png"></a>
+{#        {% if page_name == 1 %}#}
+{#            <div class="sub_page_name fl">{{ title }}</div>#}
+{#        {% endif %}#}
+		<div class="search_con fl">
+             <script>
+                $(function () {
+                    $('.input_btn').click(function () {
+                        q = $('.input_text').val();
+                        if(q==""){
+                        alert("Please enter search content");
+                        }
+                        else{
+                            location.href = '{% url "fm_goods:ordinary_search" %}?q='+q+'&page=1'
+                        }
+                    })
+                })
+
+            </script>
+			<input type="text" class="input_text fl" name="q" placeholder="Search for products">
+			<input type="button" class="input_btn fr" name="" value="Search">
+		</div>
+
+        {% if guest_cart == 1 %}
+            <div class="guest_cart fr">
+                <a href="{% url "fm_cart:cart" %}" class="cart_name fl">My Cart</a>
+                <div class="goods_count fl" id="show_count">{{ cart_num }}</div>
+            </div>
+        {% else %}
+            <div class="guest_cart fr">
+                <a href="{% url "fm_cart:cart" %}" class="cart_name fl">My Cart</a>
+                <div class="goods_count fl" id="show_count">0</div>
+            </div>
+        {% endif %}
+	</div>
+{% block content %}
+{% endblock content %}
+{% block center_body %}
+{% endblock center_body %}
+
+
+{% endblock body %}
