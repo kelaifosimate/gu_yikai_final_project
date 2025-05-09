@@ -35,7 +35,7 @@ def order(request):
         'trans_cost': trans_cost,
         'total_trans_price': total_trans_price,
     }
-    return render(request, 'fm_order/place_order.html', context)
+    return render(request, 'place_order.html', context)
 
 '''
 Transaction submission:

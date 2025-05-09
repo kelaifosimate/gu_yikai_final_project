@@ -88,9 +88,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-        "OPTIONS": {
-            "TIMEOUT": 20,
-        }
+        # 在Django 4.0中，SQLite的timeout选项应当放在这里，而不是OPTIONS中
+        "timeout": 20,
     }
 }
 
@@ -136,6 +135,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+# Media files (user uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
@@ -149,10 +152,14 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
-EMAIL_HOST = 'smtp.example.com'  # Replace with your SMTP server
-EMAIL_PORT = 465
-EMAIL_HOST_USER = 'fleamarket@example.com'  # Replace with your email address
-EMAIL_HOST_PASSWORD = 'your_password'  # Replace with your email password or app password
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # 开发环境使用控制台输出邮件
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = True
+# EMAIL_HOST = 'smtp.example.com'  # Replace with your SMTP server
+# EMAIL_PORT = 465
+# EMAIL_HOST_USER = 'fleamarket@example.com'  # Replace with your email address
+# EMAIL_HOST_PASSWORD = 'your_password'  # Replace with your email password or app password
+
+# Message framework settings
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

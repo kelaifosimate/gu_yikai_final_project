@@ -25,7 +25,7 @@ def user_cart(request):
         # Calculate how many products the current user has purchased
         return JsonResponse({'count': count})
     else:
-        return render(request, 'fm_cart/cart.html', context)
+        return render(request, 'cart.html', context)
 
 
 @user_decorator.login

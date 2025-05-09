@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.static import serve  # Function for handling uploaded files
 from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,3 +12,7 @@ urlpatterns = [
     path('order/', include('apps.fm_order.urls', namespace='fm_order')),
     path('tinymce/', include('tinymce.urls')),  # Configure URL for rich text editor
 ]
+
+# 这种方式在开发环境下为媒体文件提供服务
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

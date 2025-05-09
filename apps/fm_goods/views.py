@@ -1,6 +1,7 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, reverse
 from django.urls import reverse
+from django.db.models import Q
 from apps.fm_user import user_decorator
 from apps.fm_user.models import UserInfo, Information
 from .models import GoodsInfo, TypeInfo, GoodsContent, ContentChart
@@ -9,12 +10,14 @@ from apps.fm_order.models import OrderDetailInfo
 from apps.fm_user.models import GoodsBrowser
 from datetime import datetime
 from django.contrib import messages
+from django.http import Http404
 
 
 def index(request):
     # Query the latest 4 and hottest 4 items for each category
     username = request.session.get('user_name')
     user = UserInfo.objects.filter(uname=username).first()
+
     # Contact customer service
     # Display messages
     username1 = "customer"
@@ -23,10 +26,27 @@ def index(request):
     informations1 = Information.objects.filter(cusername1=username, cusername=username1)
     import datetime
     nowTime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Current time
+
     # Message reply
-    user_name = UserInfo.objects.get(uname=username1)  # Get current message user info
+    # Check if the customer service user exists, if not, create it
+    try:
+        user_name = UserInfo.objects.get(uname=username1)  # Get current message user info
+    except UserInfo.DoesNotExist:
+        # Create a default customer service user if it doesn't exist
+        from hashlib import sha1
+        s1 = sha1()
+        s1.update("customer123".encode('utf8'))  # Default password
+        encrypted_pwd = s1.hexdigest()
+
+        user_name = UserInfo.objects.create(
+            uname=username1,
+            upwd=encrypted_pwd,
+            uemail="customer@example.com",
+            uname_passOrfail=True
+        )
+
     # Display reply messages
-    if request.method == "POST":
+    if request.method == "POST" and username:  # Only process POST if user is logged in
         cusername = user.uname
         cusername1 = user_name.uname
         ccontent_chart = request.POST.get('title')
@@ -38,20 +58,40 @@ def index(request):
                                        ccontent_chart=ccontent_chart, cinformation_id=cinformation_id)
             messages.success(request, "Message sent successfully")
             return redirect(reverse("fm_goods:index"))
-    typelist = TypeInfo.objects.all()
-    #  _set table join operation
-    type0 = typelist[0].goodsinfo_set.order_by('-id')[0:4]  # By upload order
-    type01 = typelist[0].goodsinfo_set.order_by('-gclick')[0:4]  # By click count
-    type1 = typelist[1].goodsinfo_set.order_by('-id')[0:4]
-    type11 = typelist[1].goodsinfo_set.order_by('-gclick')[0:4]
-    type2 = typelist[2].goodsinfo_set.order_by('-id')[0:4]
-    type21 = typelist[2].goodsinfo_set.order_by('-gclick')[0:4]
-    type3 = typelist[3].goodsinfo_set.order_by('-id')[0:4]
-    type31 = typelist[3].goodsinfo_set.order_by('-gclick')[0:4]
-    type4 = typelist[4].goodsinfo_set.order_by('-id')[0:4]
-    type41 = typelist[4].goodsinfo_set.order_by('-gclick')[0:4]
-    type5 = typelist[5].goodsinfo_set.order_by('-id')[0:4]
-    type51 = typelist[5].goodsinfo_set.order_by('-gclick')[0:4]
+
+    # Get categories and products
+    try:
+        typelist = TypeInfo.objects.all()
+
+        # If no categories exist yet, create them
+        if len(typelist) == 0:
+            categories = ["Books", "Electronics", "Clothing", "Transportation", "Instruments", "Smart Devices"]
+            for cat in categories:
+                TypeInfo.objects.create(ttitle=cat)
+            typelist = TypeInfo.objects.all()
+
+        #  _set table join operation
+        type0 = typelist[0].goodsinfo_set.order_by('-id')[0:4]  # By upload order
+        type01 = typelist[0].goodsinfo_set.order_by('-gclick')[0:4]  # By click count
+        type1 = typelist[1].goodsinfo_set.order_by('-id')[0:4]
+        type11 = typelist[1].goodsinfo_set.order_by('-gclick')[0:4]
+        type2 = typelist[2].goodsinfo_set.order_by('-id')[0:4]
+        type21 = typelist[2].goodsinfo_set.order_by('-gclick')[0:4]
+        type3 = typelist[3].goodsinfo_set.order_by('-id')[0:4]
+        type31 = typelist[3].goodsinfo_set.order_by('-gclick')[0:4]
+        type4 = typelist[4].goodsinfo_set.order_by('-id')[0:4]
+        type41 = typelist[4].goodsinfo_set.order_by('-gclick')[0:4]
+        type5 = typelist[5].goodsinfo_set.order_by('-id')[0:4]
+        type51 = typelist[5].goodsinfo_set.order_by('-gclick')[0:4]
+    except IndexError:
+        # Handle the case where there are fewer than 6 categories
+        # This provides empty lists as defaults
+        type0, type01 = [], []
+        type1, type11 = [], []
+        type2, type21 = [], []
+        type3, type31 = [], []
+        type4, type41 = [], []
+        type5, type51 = [], []
 
     cart_num = 0
     # Check if there is a login status
@@ -77,14 +117,17 @@ def index(request):
         'nowTime': nowTime,
     }
 
-    return render(request, 'fm_goods/index.html', context)
+    return render(request, 'index.html', context)
 
 
 def good_list(request, tid, pindex, sort):
     username = request.session.get('user_name')
     user = UserInfo.objects.filter(uname=username).first()
     # tid: product category information, pindex: product page number, sort: product display sorting method
-    typeinfo = TypeInfo.objects.get(pk=int(tid))
+    try:
+        typeinfo = TypeInfo.objects.get(pk=int(tid))
+    except TypeInfo.DoesNotExist:
+        raise Http404("Category does not exist")
 
     # Find the current product category by primary key
     news = typeinfo.goodsinfo_set.order_by('-id')[0:2]
@@ -123,7 +166,7 @@ def good_list(request, tid, pindex, sort):
         'news': news,
         'user': user,
     }
-    return render(request, 'fm_goods/list.html', context)
+    return render(request, 'list.html', context)
 
 
 def detail(request, gid):
@@ -131,7 +174,11 @@ def detail(request, gid):
         uid = request.session['user_id']
         user = UserInfo.objects.get(id=uid)
         good_id = gid
-        goods = GoodsInfo.objects.get(pk=int(good_id))
+        try:
+            goods = GoodsInfo.objects.get(pk=int(good_id))
+        except GoodsInfo.DoesNotExist:
+            raise Http404("Product does not exist")
+
         goods.gclick = goods.gclick + 1  # Product click count
         goods.save()
 
@@ -145,7 +192,7 @@ def detail(request, gid):
             'id': good_id,
             'user': user,
         }
-        response = render(request, 'fm_goods/detail.html', context)
+        response = render(request, 'detail.html', context)
 
         try:
             browsed_good = GoodsBrowser.objects.get(user_id=int(uid), good_id=int(good_id))
@@ -167,7 +214,11 @@ def detail(request, gid):
 
     else:
         good_id = gid
-        goods = GoodsInfo.objects.get(pk=int(good_id))
+        try:
+            goods = GoodsInfo.objects.get(pk=int(good_id))
+        except GoodsInfo.DoesNotExist:
+            raise Http404("Product does not exist")
+
         news = goods.gtype.goodsinfo_set.order_by('-id')[0:2]
         context = {
             'title': goods.gtype.ttitle,
@@ -177,7 +228,7 @@ def detail(request, gid):
             'news': news,
             'id': good_id,
         }
-        return render(request, 'fm_goods/detail.html', context)
+        return render(request, 'detail.html', context)
 
 
 # Comment
@@ -186,7 +237,11 @@ def content(request, gid, pindex):
         uid = request.session['user_id']
         user = UserInfo.objects.get(id=uid)
         good_id = gid
-        goods = GoodsInfo.objects.get(pk=int(good_id))
+        try:
+            goods = GoodsInfo.objects.get(pk=int(good_id))
+        except GoodsInfo.DoesNotExist:
+            raise Http404("Product does not exist")
+
         # Get current product information
         news = goods.gtype.goodsinfo_set.order_by('-id')[0:2]
         # Conditional query
@@ -225,16 +280,22 @@ def content(request, gid, pindex):
             cuser_content = request.POST.get('text')
             cgoodsname_id = goods.id
             if cpic == "":
-                GoodsContent.objects.create(ctitle=ctitle, cusername=cusername, cuser_content=cuser_content, cgoodsname_id=cgoodsname_id, clogo=clogo)
+                GoodsContent.objects.create(ctitle=ctitle, cusername=cusername, cuser_content=cuser_content,
+                                            cgoodsname_id=cgoodsname_id, clogo=clogo)
                 messages.success(request, "Comment successful!")
             else:
-                GoodsContent.objects.create(ctitle=ctitle, cpic=cpic, cusername=cusername, cuser_content=cuser_content, cgoodsname_id=cgoodsname_id, clogo=clogo)
+                GoodsContent.objects.create(ctitle=ctitle, cpic=cpic, cusername=cusername, cuser_content=cuser_content,
+                                            cgoodsname_id=cgoodsname_id, clogo=clogo)
                 messages.success(request, "Comment successful!")
 
-        return render(request, 'fm_goods/content.html', context)
+        return render(request, 'content.html', context)
     else:
         good_id = gid
-        goods = GoodsInfo.objects.get(pk=int(good_id))
+        try:
+            goods = GoodsInfo.objects.get(pk=int(good_id))
+        except GoodsInfo.DoesNotExist:
+            raise Http404("Product does not exist")
+
         # Get current product information
         news = goods.gtype.goodsinfo_set.order_by('-id')[0:2]
         # Conditional query
@@ -264,7 +325,7 @@ def content(request, gid, pindex):
             'page': page,
             'goodsOrderDetailInfos': goodsOrderDetailInfos,
         }
-        return render(request, 'fm_goods/content.html', context)
+        return render(request, 'content.html', context)
 
 
 @user_decorator.login
@@ -281,7 +342,7 @@ def ordinary_search(request):
     from django.db.models import Q
 
     search_keywords = request.GET.get('q', '')
-    pindex = request.GET.get('pindex', 1)
+    pindex = request.GET.get('page', 1)
     search_status = 1
     cart_num, guest_cart = 0, 0
 
@@ -315,5 +376,6 @@ def ordinary_search(request):
         'page': page,
         'paginator': paginator,
         'user': user,
+        'query': search_keywords,  # Pass the search query back to the template
     }
-    return render(request, 'fm_goods/ordinary_search.html', context)
+    return render(request, 'ordinary_search.html', context)

@@ -1,4 +1,5 @@
 {% extends 'base_foot.html' %}
+{% load static %}
 
 {% block head %}
 <script>
@@ -7,17 +8,17 @@
         pwd_error = false;
         vc_error = false;
 
-        if({{ error_name }}==1){
+        if({{ error_name|default:0 }}==1){
             $('.user_error').html('Username error').show();
         }
-        if({{ error_pwd }}==1){
+        if({{ error_pwd|default:0 }}==1){
             $('.pwd_error').html('Password error').show();
         }
-        if({{ error_vc }}==1){
+        if({{ error_vc|default:0 }}==1){
             $('.vc_error').html('Verification code error').show();
         }
         $('.name_input').blur(function () {
-            if($('.name_input').val().length=0){
+            if($('.name_input').val().length==0){
                 $('.user_error').html('Please enter username').show();
                 name_error = false;
             }else{
@@ -26,7 +27,7 @@
             }
         });
         $('.pass_input').blur(function () {
-            if($('.pass_input').val().length=0){
+            if($('.pass_input').val().length==0){
                 $('.pwd_error').html('Please enter password').show();
                 pwd_error = false;
             }else{
@@ -35,7 +36,7 @@
             }
         });
         $('.vc_input').blur(function () {
-            if($('.vc_input').val().length=0){
+            if($('.vc_input').val().length==0){
                 $('.vc_error').html('Please enter verification code').show();
                 vc_error = false;
             }else{
@@ -49,12 +50,12 @@
 
 {% block body %}
 	<div class="login_top clearfix">
-		<a href="{% url "fm_goods:index" %}" class="login_logo"><img src="/static/images/logo_banner2.png" style="width: 300px;height:100px;overflow: hidden;object-fit: cover;"></a>
+		<a href="{% url "fm_goods:index" %}" class="login_logo"><img src="{% static 'images/logo_banner2.png' %}" style="width: 300px;height:100px;overflow: hidden;object-fit: cover;"></a>
 	</div>
 
 	<div class="login_form_bg">
 		<div class="login_form_wrap clearfix">
-			<div class="login_banner fl"><img src="../../static/images/timg%5B2%5D.png" alt=""></div>
+			<div class="login_banner fl"><img src="{% static 'images/timg[2].png' %}" alt=""></div>
 			<div class="slogan fl">Find Treasures · Pre-Loved Items</div>
 			<div class="login_form fr">
 				<div class="login_title clearfix">
@@ -64,12 +65,10 @@
 				<div class="form_input">
 					<form action="{% url "fm_user:login_handle" %}" method="post">
                         {% csrf_token %}
-						<input type="text" name="username" class="name_input" value="{{ username }}" placeholder="Please enter username">
+						<input type="text" name="username" class="name_input" value="{{ username|default:'' }}" placeholder="Please enter username">
 						<div class="user_error">Input error</div>
-						<input type="password" name="pwd" class="pass_input" value="{{ password }}" placeholder="Please enter password">
-{#                        When a cookie is set, the value attribute ensures the value is still visible on the page after refresh #}
+						<input type="password" name="pwd" class="pass_input" value="{{ password|default:'' }}" placeholder="Please enter password">
 						<div class="pwd_error">Input error</div>
-{#                        Verification code #}
                         <input type="text" name="vc" class="vc_input" placeholder="Please enter verification code">
                         <div class="vc_error">Input error</div>
                         <img id='verifycode' src="/user/verifycode/?1" alt="CheckCode"/>

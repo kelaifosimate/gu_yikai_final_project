@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block head %}
-    <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/static/js/slide.js"></script>
+    <script type="text/javascript" src="{% static 'js/jquery-ui.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/slide.js' %}"></script>
 {% endblock head %}
 
 {% block center_body %}
@@ -67,27 +68,27 @@
 
 	<div class="center_con clearfix">
 		<ul class="subnav fl">
-			<li><img src="/static/images/书籍.jpg" alt="Books"><a href="#model01" class="fruit">Books</a></li>
-			<li><img src="/static/images/家电.jpg" alt="Electronics"><a href="#model02" class="seafood">Electronics</a></li>
-			<li><img src="/static/images/衣物.jpg" alt="Clothing"><a href="#model03" class="meet">Clothing</a></li>
-			<li><img src="/static/images/出行.jpg" alt="Transportation"><a href="#model04" class="egg">Transportation</a></li>
-			<li><img src="/static/images/乐器.jpg" alt="Instruments"><a href="#model05" class="vegetables">Instruments</a></li>
-			<li><img src="/static/images/智能_03.jpg" alt="Smart Devices"><a href="#model06" class="ice">Smart Devices</a></li>
+			<li><img src="{% static 'images/书籍.jpg' %}" alt="Books"><a href="#model01" class="fruit">Books</a></li>
+			<li><img src="{% static 'images/家电.jpg' %}" alt="Electronics"><a href="#model02" class="seafood">Electronics</a></li>
+			<li><img src="{% static 'images/衣物.jpg' %}" alt="Clothing"><a href="#model03" class="meet">Clothing</a></li>
+			<li><img src="{% static 'images/出行.jpg' %}" alt="Transportation"><a href="#model04" class="egg">Transportation</a></li>
+			<li><img src="{% static 'images/乐器.jpg' %}" alt="Instruments"><a href="#model05" class="vegetables">Instruments</a></li>
+			<li><img src="{% static 'images/智能_03.jpg' %}" alt="Smart Devices"><a href="#model06" class="ice">Smart Devices</a></li>
 		</ul>
 		<div class="slide fl">
 			<ul class="slide_pics">
-				<li><img src="/static/images/slide07.jpg" alt="slide"></li>
-				<li><img src="/static/images/slide05.jpg" alt="slide"></li>
-				<li><img src="/static/images/slide06.jpg" alt="slide"></li>
-				<li><img src="/static/images/slide01.jpg" alt="slide"></li>
+				<li><img src="{% static 'images/slide07.jpg' %}" alt="slide"></li>
+				<li><img src="{% static 'images/slide05.jpg' %}" alt="slide"></li>
+				<li><img src="{% static 'images/slide06.jpg' %}" alt="slide"></li>
+				<li><img src="{% static 'images/slide01.jpg' %}" alt="slide"></li>
 			</ul>
 			<div class="prev"></div>
 			<div class="next"></div>
 			<ul class="points"></ul>
 		</div>
 		<div class="adv fl">
-			<a href="#"><img src="/static/images/adv03.jpg"></a>
-			<a href="#"><img src="/static/images/adv05.jpg"></a>
+			<a href="#"><img src="{% static 'images/adv03.jpg' %}"></a>
+			<a href="#"><img src="{% static 'images/adv05.jpg' %}"></a>
 		</div>
 	</div>
 
@@ -106,7 +107,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner.jpg' %}"></div>
 			<ul class="goods_list fl">
                 {% for goods in type0 %}
 {#                    Display by latest upload #}
@@ -133,7 +134,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner1.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner1.jpg' %}"></div>
 			<ul class="goods_list fl">
                 {% for goods in type11 %}
                 <li>
@@ -162,7 +163,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner3.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner3.jpg' %}"></div>
 			<ul class="goods_list fl">
 				{% for goods in type21 %}
                 <li>
@@ -192,7 +193,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner5.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner5.jpg' %}"></div>
 			<ul class="goods_list fl">
 				{% for goods in type31 %}
                 <li>
@@ -221,7 +222,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner6.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner6.jpg' %}"></div>
 			<ul class="goods_list fl">
 				{% for goods in type41 %}
                 <li>
@@ -250,7 +251,7 @@
 		</div>
 
 		<div class="goods_con clearfix">
-			<div class="goods_banner fl"><img src="/static/images/banner7.jpg"></div>
+			<div class="goods_banner fl"><img src="{% static 'images/banner7.jpg' %}"></div>
 			<ul class="goods_list fl">
 				{% for goods in type51 %}
                 <li>
@@ -264,7 +265,7 @@
 		</div>
 	</div>
 <div class="tools">
-        <img src="../../static/images/top_tool.jpg" alt="">
+        <img src="{% static 'images/top_tool.jpg' %}" alt="">
     </div>
     <div class="tools_shixian">
         <div>
@@ -293,20 +294,20 @@
         </div>
         <div>
             <a href="https://w.qq.com/">
-                <img src="../../static/images/qq.jpg" style="width: 40px;height: 40px;overflow: hidden;object-fit: cover;" alt="">
+                <img src="{% static 'images/qq.jpg' %}" style="width: 40px;height: 40px;overflow: hidden;object-fit: cover;" alt="">
                 <button type="submit" name="submit5" class="submit5">
                 </button>
             </a>
         </div>
         <div>
             <a href="javascript:void(0)" onclick="quote_comment('${goodsContent}')" class="btn">
-                <img src="../../static/images/lianxigefu.jpg" style="width: 40px;height: 40px;overflow: hidden;object-fit: cover;" alt="">
+                <img src="{% static 'images/lianxigefu.jpg' %}" style="width: 40px;height: 40px;overflow: hidden;object-fit: cover;" alt="">
                 <button type="submit" name="submit6" class="submit6">
                 </button>
             </a>
         </div>
     </div>
-	<script type="text/javascript" src="/static/js/slide.js"></script>
+	<script type="text/javascript" src="{% static 'js/slide.js' %}"></script>
     <script type="text/javascript">
         BCSlideshow('focuspic');
         var oFruit = document.getElementById('fruit_more');
