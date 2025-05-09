@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<article>
+    <div class="row">
+        <div class="offset-by-two eight columns">
+            <h2>Order Details</h2>
+            
+            <section>
+                <h3>Order Information</h3>
+                <table>
+                    <tr>
+                        <th>Order Number:</th>
+                        <td>{{ order.oid }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date:</th>
+                        <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if order.oIsPay %}
+                            <span class="status-paid">Paid</span>
+                            {% else %}
+                            <span class="status-unpaid">Unpaid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Total:</th>
+                        <td>${{ order.ototal }}</td>
+                    </tr>
+                </table>
+            </section>
+            
+            <section>
+                <h3>Shipping Address</h3>
+                <p>{{ order.oaddress }}</p>
+            </section>
+            
+            <section>
+                <h3>Order Items</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in details %}
+                        <tr>
+                            <td>
+                                <a href="/detail/{{ detail.goods.id }}/">
+                                    {{ detail.goods.gtitle }}
+                                </a>
+                            </td>
+                            <td>${{ detail.price }}</td>
+                            <td>{{ detail.count }}</td>
+                            <td>${{ detail.price|floatformat:2|mul:detail.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            
+            <div style="margin-top: 20px;">
+                <a href="{% url 'fm_order:list' 1 %}" class="button">Back to Orders</a>
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<article>
+    <div class="row">
+        <div class="offset-by-two eight columns">
+            <h2>Order History</h2>
+            
+            {% if orders %}
+            <section>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.oid }}</td>
+                            <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
+                            <td>${{ order.ototal }}</td>
+                            <td>
+                                {% if order.oIsPay %}
+                                <span class="status-paid">Paid</span>
+                                {% else %}
+                                <span class="status-unpaid">Unpaid</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'fm_order:detail' order.oid %}" class="button">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            
+            {% if paginator.num_pages > 1 %}
+            <div class="pagination">
+                {% if page.has_previous %}
+                    <a href="{% url 'fm_order:list' page.previous_page_number %}" class="button">Previous</a>
+                {% endif %}
+                
+                <span>Page {{ page.number }} of {{ paginator.num_pages }}</span>
+                
+                {% if page.has_next %}
+                    <a href="{% url 'fm_order:list' page.next_page_number %}" class="button">Next</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <p><em>You have no orders yet.</em></p>
+            <a href="{% url 'fm_goods:index' %}" class="button button-primary">Continue Shopping</a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endblock %}

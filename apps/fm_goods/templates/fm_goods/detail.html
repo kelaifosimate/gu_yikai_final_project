@@ -1,0 +1,66 @@
+{% extends 'fm_goods/base.html' %}
+
+{% block content %}
+    <article>
+        <div class="row">
+            <div class="offset-by-two eight columns">
+                <h2>{{ goods.gtitle }}</h2>
+                <div class="row">
+                    <div class="six columns">
+                        <img src="{{ MEDIA_URL }}{{ goods.gpic }}" style="width: 100%; max-width: 300px;">
+                    </div>
+                    <div class="six columns">
+                        <table>
+                            <tr>
+                                <th>Price:</th>
+                                <td>${{ goods.gprice }}</td>
+                            </tr>
+                            <tr>
+                                <th>Seller:</th>
+                                <td>{{ goods.gunit }}</td>
+                            </tr>
+                            <tr>
+                                <th>Available:</th>
+                                <td>{{ goods.gkucun }} items</td>
+                            </tr>
+                            <tr>
+                                <th>Description:</th>
+                                <td>{{ goods.gjianjie }}</td>
+                            </tr>
+                        </table>
+
+                        {% if user %}
+                        <div style="margin-top: 20px;">
+                            <a href="/cart/add{{ goods.id }}_1/" class="button button-primary">Add to Cart</a>
+                        </div>
+                        {% else %}
+                        <div style="margin-top: 20px;">
+                            <a href="{% url 'fm_user:login' %}" class="button button-primary">Login to Purchase</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Details</h3>
+                    <p>{{ goods.gcontent }}</p>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>You May Also Like</h3>
+                    <ul class="inline">
+                        {% for item in news %}
+                        <li style="margin-right: 20px; display: inline-block;">
+                            <a href="/detail/{{ item.id }}/">
+                                <img src="{{ MEDIA_URL }}{{ item.gpic }}" style="width: 100px; height: 100px; object-fit: cover;">
+                                <br>
+                                {{ item.gtitle }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </article>
+{% endblock %}

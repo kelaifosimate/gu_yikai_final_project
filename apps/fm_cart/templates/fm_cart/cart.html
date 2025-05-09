@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <article>
+        <div class="row">
+            <div class="offset-by-two eight columns">
+                <h2>Your Shopping Cart</h2>
+                
+                {% if carts %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cart in carts %}
+                        <tr>
+                            <td>
+                                <a href="/detail/{{ cart.goods.id }}/">
+                                    <img src="{{ MEDIA_URL }}{{ cart.goods.gpic }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {{ cart.goods.gtitle }}
+                                </a>
+                            </td>
+                            <td>${{ cart.goods.gprice }}</td>
+                            <td>{{ cart.count }}</td>
+                            <td>${{ cart.goods.gprice|floatformat:2|mul:cart.count }}</td>
+                            <td>
+                                <a href="javascript:;" onclick="delete_cart({{ cart.id }})" class="button">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <h4>Total: ${{ total_price|default:"0.00" }}</h4>
+                    <a href="{% url 'fm_order:order' %}" class="button button-primary">Checkout</a>
+                </div>
+                {% else %}
+                <p><em>Your cart is empty.</em></p>
+                <a href="{% url 'fm_goods:index' %}" class="button button-primary">Continue Shopping</a>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+    
+    <script>
+        function delete_cart(cart_id) {
+            if (confirm('Are you sure you want to remove this item?')) {
+                $.get('/cart/delete' + cart_id + '/', function(data) {
+                    if (data.ok == 1) {
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}

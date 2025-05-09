@@ -1,18 +1,19 @@
 from django.contrib import admin
-from django.urls import path, include, re_path
-from django.views.static import serve  # Function for handling uploaded files
+from django.urls import path, include
+from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.fm_goods.urls', namespace='fm_goods')),
-    path('user/', include('apps.fm_user.urls', namespace='fm_user')),
-    path('cart/', include('apps.fm_cart.urls', namespace='fm_cart')),
-    path('order/', include('apps.fm_order.urls', namespace='fm_order')),
-    path('tinymce/', include('tinymce.urls')),  # Configure URL for rich text editor
+    path('', include('apps.fm_goods.urls')),
+    path('user/', include('apps.fm_user.urls')),
+
+    # Only include the minimum necessary URLs for basic functionality
+    path('cart/', include('apps.fm_cart.urls')),
+    path('order/', include('apps.fm_order.urls')),
 ]
 
-# 这种方式在开发环境下为媒体文件提供服务
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
