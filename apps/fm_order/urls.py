@@ -4,8 +4,9 @@ from . import views
 app_name = 'fm_order'
 
 urlpatterns = [
-    path('', views.order, name="order"),
+    path('checkout/', views.order_checkout, name="checkout"),
     path('handle/', views.order_handle, name="handle"),
-    path('list/<int:page>/', views.order_list, name="list"),
-    path('detail/<str:order_id>/', views.order_detail, name="detail"),
+    path('list/', views.OrderList.as_view(), name="list"),
+    path('detail/<str:order_id>/', views.OrderDetail.as_view(), name="detail"),
+    path('pay/<str:order_id>/', views.pay, name="pay"),
 ]

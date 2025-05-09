@@ -1,170 +1,69 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.http import HttpResponseForbidden
-from .models import GoodsInfo, TypeInfo
-from apps.fm_cart.models import CartInfo
+from django.http import HttpResponseForbidden, JsonResponse
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+
+from .models import GoodsInfo
+from .forms import GoodsForm
 from apps.fm_user.models import UserInfo
 from apps.fm_user.user_decorator import login
+from apps.fm_cart.models import CartInfo
 
 
-def index(request):
-    # Redirect to about page for non-logged in users
-    if 'user_id' not in request.session:
-        return redirect('about')
+class ProductList(ListView):
+    model = GoodsInfo
+    template_name = 'fm_goods/list.html'
+    context_object_name = 'goods_list'
+    paginate_by = 10
 
-    username = request.session.get('user_name')
-    user = UserInfo.objects.filter(uname=username).first() if username else None
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Products'
+        return context
 
-    typelist = TypeInfo.objects.all()
 
-    # Get new products (latest products)
-    type0 = GoodsInfo.objects.order_by('-id')[:8]
+class ProductDetail(DetailView):
+    model = GoodsInfo
+    template_name = 'fm_goods/detail.html'
+    context_object_name = 'goods'
+    pk_url_kwarg = 'goods_id'
 
-    # Get popular products (most clicked)
-    type01 = GoodsInfo.objects.order_by('-gclick')[:8]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        goods = self.get_object()
+        context['title'] = goods.gtitle
 
-    # Get cart count
-    cart_num = 0
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
-        cart_num = CartInfo.objects.filter(user_id=int(user_id)).count()
+        # Increment view count
+        goods.gclick += 1
+        goods.save()
 
-    context = {
-        'title': 'Home',
-        'cart_num': cart_num,
-        'type0': type0,
-        'type01': type01,
-        'user': user,
-    }
+        # Get recommendations
+        context['recommended'] = GoodsInfo.objects.exclude(id=goods.id).order_by('-gclick')[:5]
 
-    return render(request, 'fm_goods/index.html', context)
+        return context
 
 
 @login
-def list(request, type_id, page_index, sort):
-    """Product list view with pagination and sorting"""
-    typeinfo = TypeInfo.objects.get(id=int(type_id))
-
-    # Get product list with sorting
-    if sort == '1':  # Default sorting (by id)
-        goods_list = GoodsInfo.objects.filter(gtype_id=int(type_id)).order_by('-id')
-    elif sort == '2':  # Sort by price
-        goods_list = GoodsInfo.objects.filter(gtype_id=int(type_id)).order_by('gprice')
-    elif sort == '3':  # Sort by popularity
-        goods_list = GoodsInfo.objects.filter(gtype_id=int(type_id)).order_by('-gclick')
+def add_product(request):
+    if request.method == 'POST':
+        form = GoodsForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.gunit = request.session.get('user_name')
+            product.save()
+            messages.success(request, "Product added successfully.")
+            return redirect('fm_goods:detail', goods_id=product.id)
     else:
-        goods_list = GoodsInfo.objects.filter(gtype_id=int(type_id)).order_by('-id')
-
-    # Paginate results
-    paginator = Paginator(goods_list, 10)  # 10 items per page
-
-    try:
-        page = paginator.page(int(page_index))
-    except:
-        page = paginator.page(1)
-
-    # Get recommendations (new products)
-    news = GoodsInfo.objects.order_by('-id')[:2]
-
-    # Get cart count
-    cart_num = 0
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
-        cart_num = CartInfo.objects.filter(user_id=int(user_id)).count()
-
-    context = {
-        'title': typeinfo.ttitle,
-        'typeinfo': typeinfo,
-        'page': page,
-        'paginator': paginator,
-        'sort': sort,
-        'news': news,
-        'cart_num': cart_num,
-    }
-
-    return render(request, 'fm_goods/list.html', context)
-
-
-@login
-def detail(request, goods_id):
-    """Product detail view"""
-    goods = GoodsInfo.objects.get(id=int(goods_id))
-
-    # Increment click count
-    goods.gclick += 1
-    goods.save()
-
-    # Get recommendations (new products in same category)
-    news = goods.gtype.goodsinfo_set.order_by('-id')[:2]
-
-    # Get cart count
-    cart_num = 0
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
-        cart_num = CartInfo.objects.filter(user_id=int(user_id)).count()
-
-    context = {
-        'title': goods.gtitle,
-        'goods': goods,
-        'news': news,
-        'cart_num': cart_num,
-    }
-
-    return render(request, 'fm_goods/detail.html', context)
-
-
-def search(request):
-    """Search products view"""
-    query = request.GET.get('q', '')
-    page_index = request.GET.get('page', '1')
-
-    if query:
-        goods_list = GoodsInfo.objects.filter(gtitle__contains=query)
-        search_status = 1 if goods_list.exists() else 0
-    else:
-        goods_list = GoodsInfo.objects.order_by('-id')
-        search_status = 1
-
-    # Paginate results
-    paginator = Paginator(goods_list, 10)  # 10 items per page
-
-    try:
-        page = paginator.page(int(page_index))
-    except:
-        page = paginator.page(1)
-
-    # Get cart count
-    cart_num = 0
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
-        cart_num = CartInfo.objects.filter(user_id=int(user_id)).count()
-
-    context = {
-        'title': 'Search Results: ' + query,
-        'query': query,
-        'page': page,
-        'paginator': paginator,
-        'search_status': search_status,
-        'cart_num': cart_num,
-    }
-
-    return render(request, 'fm_goods/search.html', context)
-
-
-@login
-def add_product(request, type_id):
-    try:
-        typeinfo = TypeInfo.objects.get(id=type_id)
-    except TypeInfo.DoesNotExist:
-        return redirect('fm_goods:index')
+        form = GoodsForm()
 
     context = {
         'title': 'Add Product',
-        'type_id': type_id,
-        'typeinfo': typeinfo,
+        'form': form,
     }
-
     return render(request, 'fm_goods/add_product.html', context)
 
 
@@ -173,93 +72,74 @@ def add_product_handle(request):
     if request.method != 'POST':
         return redirect('fm_goods:index')
 
-    type_id = request.POST.get('type_id')
-    gtitle = request.POST.get('gtitle')
-    gprice = request.POST.get('gprice')
-    gkucun = request.POST.get('gkucun')
-    gjianjie = request.POST.get('gjianjie')
-    gcontent = request.POST.get('gcontent')
-    gpic = request.FILES.get('gpic')
-
-    user_name = request.session.get('user_name')
-
-    try:
-        typeinfo = TypeInfo.objects.get(id=type_id)
-
-        product = GoodsInfo.objects.create(
-            gtitle=gtitle,
-            gprice=gprice,
-            gkucun=gkucun,
-            gjianjie=gjianjie,
-            gcontent=gcontent,
-            gpic=gpic,
-            gunit=user_name,
-            gtype=typeinfo
-        )
-
+    form = GoodsForm(request.POST, request.FILES)
+    if form.is_valid():
+        product = form.save(commit=False)
+        product.gunit = request.session.get('user_name')
+        product.save()
         messages.success(request, "Product added successfully.")
-        return redirect('fm_goods:list', type_id=type_id, page_index=1, sort=1)
-    except Exception as e:
-        messages.error(request, f"Error adding product: {str(e)}")
-        return redirect('fm_goods:add_product', type_id=type_id)
+        return redirect('fm_goods:detail', goods_id=product.id)
+    else:
+        messages.error(request, "Error adding product. Please check the form.")
+        context = {
+            'title': 'Add Product',
+            'form': form,
+        }
+        return render(request, 'fm_goods/add_product.html', context)
 
 
 @login
 def edit_product(request, goods_id):
     product = get_object_or_404(GoodsInfo, id=goods_id)
 
+    # Check if current user is the seller
     user_name = request.session.get('user_name')
     if product.gunit != user_name:
         return HttpResponseForbidden("You do not have permission to edit this product.")
 
+    if request.method == 'POST':
+        form = GoodsForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Product updated successfully.")
+            return redirect('fm_goods:detail', goods_id=product.id)
+    else:
+        form = GoodsForm(instance=product)
+
     context = {
         'title': 'Edit Product',
+        'form': form,
         'product': product,
     }
-
     return render(request, 'fm_goods/edit_product.html', context)
 
 
 @login
 def edit_product_handle(request, goods_id):
-    if request.method != 'POST':
-        return redirect('fm_goods:index')
-
+    """Handle edit product form submission"""
     product = get_object_or_404(GoodsInfo, id=goods_id)
 
+    # Check if current user is the seller
     user_name = request.session.get('user_name')
     if product.gunit != user_name:
         return HttpResponseForbidden("You do not have permission to edit this product.")
 
-    gtitle = request.POST.get('gtitle')
-    gprice = request.POST.get('gprice')
-    gkucun = request.POST.get('gkucun')
-    gjianjie = request.POST.get('gjianjie')
-    gcontent = request.POST.get('gcontent')
-
-    try:
-        product.gtitle = gtitle
-        product.gprice = gprice
-        product.gkucun = gkucun
-        product.gjianjie = gjianjie
-        product.gcontent = gcontent
-
-        if 'gpic' in request.FILES:
-            product.gpic = request.FILES['gpic']
-
-        product.save()
-
-        messages.success(request, "Product updated successfully.")
-        return redirect('fm_goods:detail', goods_id=goods_id)
-    except Exception as e:
-        messages.error(request, f"Error updating product: {str(e)}")
-        return redirect('fm_goods:edit_product', goods_id=goods_id)
+    if request.method == 'POST':
+        form = GoodsForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Product updated successfully.")
+            return redirect('fm_goods:detail', goods_id=product.id)
+    else:
+        messages.error(request, "Invalid request method.")
+        return redirect('fm_goods:edit_product', goods_id=product.id)
 
 
 @login
 def delete_product(request, goods_id):
     product = get_object_or_404(GoodsInfo, id=goods_id)
 
+    # Check if current user is the seller
     user_name = request.session.get('user_name')
     if product.gunit != user_name:
         return HttpResponseForbidden("You do not have permission to delete this product.")
@@ -268,27 +148,64 @@ def delete_product(request, goods_id):
         'title': 'Delete Product',
         'product': product,
     }
-
     return render(request, 'fm_goods/delete_product.html', context)
 
 
 @login
 def delete_product_handle(request, goods_id):
-    if request.method != 'POST':
-        return redirect('fm_goods:index')
-
+    """Handle delete product confirmation"""
     product = get_object_or_404(GoodsInfo, id=goods_id)
 
+    # Check if current user is the seller
     user_name = request.session.get('user_name')
     if product.gunit != user_name:
         return HttpResponseForbidden("You do not have permission to delete this product.")
 
-    type_id = product.gtype.id
-
-    try:
+    if request.method == 'POST':
         product.delete()
         messages.success(request, "Product deleted successfully.")
-    except Exception as e:
-        messages.error(request, f"Error deleting product: {str(e)}")
+        return redirect('fm_goods:list')
+    else:
+        messages.error(request, "Invalid request method.")
+        return redirect('fm_goods:delete_product', goods_id=product.id)
 
-    return redirect('fm_goods:list', type_id=type_id, page_index=1, sort=1)
+
+def search(request):
+    query = request.GET.get('q', '')
+    page = request.GET.get('page', 1)
+
+    if query:
+        results = GoodsInfo.objects.filter(
+            Q(gtitle__icontains=query) |
+            Q(gjianjie__icontains=query)
+        )
+    else:
+        results = GoodsInfo.objects.all()
+
+    paginator = Paginator(results, 10)
+    page_obj = paginator.get_page(page)
+
+    context = {
+        'title': 'Search Results',
+        'query': query,
+        'page': page_obj,
+        'paginator': paginator,
+    }
+
+    return render(request, 'fm_goods/search.html', context)
+
+
+def index(request):
+    # Get newest products
+    newest_products = GoodsInfo.objects.order_by('-id')[:8]
+
+    # Get most popular products
+    popular_products = GoodsInfo.objects.order_by('-gclick')[:8]
+
+    context = {
+        'title': 'Home',
+        'newest_products': newest_products,
+        'popular_products': popular_products,
+    }
+
+    return render(request, 'fm_goods/index.html', context)

@@ -25,21 +25,22 @@
               <tr class="cart-item" id="cart_{{ cart.id }}">
                 <td class="cart-product">
                   <a href="{% url 'fm_goods:detail' cart.goods.id %}">
-                    <img src="{{ MEDIA_URL }}{{ cart.goods.gpic }}" alt="{{ cart.goods.gtitle }}" class="cart-thumbnail">
+                    <img src="{{ MEDIA_URL }}{{ cart.goods.gpic }}" alt="Product Image" class="cart-thumbnail">
                     {{ cart.goods.gtitle }}
                   </a>
                 </td>
                 <td class="cart-price">${{ cart.goods.gprice }}</td>
                 <td class="cart-quantity">
                   <div class="quantity-control">
-                    <a href="javascript:update_cart({{ cart.id }}, -1);" class="button quantity-button">-</a>
-                    <input type="text" value="{{ cart.count }}" class="quantity-input" id="count_{{ cart.id }}" readonly>
-                    <a href="javascript:update_cart({{ cart.id }}, 1);" class="button quantity-button">+</a>
+                    <button type="button" onclick="updateQuantity({{ cart.id }}, -1)" class="button quantity-button">-</button>
+                    <input type="number" id="quantity_{{ cart.id }}" value="{{ cart.count }}" min="1"
+                           onchange="updateQuantityDirect({{ cart.id }}, this.value)" class="quantity-input">
+                    <button type="button" onclick="updateQuantity({{ cart.id }}, 1)" class="button quantity-button">+</button>
                   </div>
                 </td>
                 <td class="cart-subtotal" id="subtotal_{{ cart.id }}">${{ cart.goods.gprice|mul:cart.count }}</td>
                 <td class="cart-actions">
-                  <a href="javascript:delete_cart({{ cart.id }});" class="button">Delete</a>
+                  <button type="button" onclick="deleteCartItem({{ cart.id }})" class="button">Delete</button>
                 </td>
               </tr>
               {% endfor %}
@@ -55,7 +56,7 @@
 
           <div class="cart-actions">
             <a href="{% url 'fm_goods:index' %}" class="button">Continue Shopping</a>
-            <a href="{% url 'fm_order:order' %}" class="button button-primary">Proceed to Checkout</a>
+            <a href="{% url 'fm_order:checkout' %}" class="button button-primary">Proceed to Checkout</a>
           </div>
         </section>
       {% else %}
@@ -68,40 +69,91 @@
   </div>
 {% endblock %}
 
-{% block head %}
-<script type="text/javascript">
-  function update_cart(cart_id, change) {
-    var count_input = $('#count_' + cart_id);
-    var current_count = parseInt(count_input.val());
-    var new_count = current_count + change;
+{% block scripts %}
+<script>
+  // 更新购物车中的商品数量 (+/-)
+  function updateQuantity(cartId, change) {
+    const inputElement = document.getElementById(`quantity_${cartId}`);
+    let newQuantity = parseInt(inputElement.value) + change;
 
-    if (new_count < 1) {
-      new_count = 1;
+    // 确保数量至少为1
+    if (newQuantity < 1) newQuantity = 1;
+
+    inputElement.value = newQuantity;
+    updateCartItem(cartId, newQuantity);
+  }
+
+  // 直接更新购物车中的商品数量（输入框直接输入）
+  function updateQuantityDirect(cartId, quantity) {
+    const newQuantity = parseInt(quantity) || 1;
+    if (newQuantity < 1) {
+      document.getElementById(`quantity_${cartId}`).value = 1;
+      updateCartItem(cartId, 1);
+    } else {
+      updateCartItem(cartId, newQuantity);
     }
+  }
 
-    $.get('/cart/update' + cart_id + '_' + new_count + '/', function(data) {
-      if (data.ok == 1) {
-        count_input.val(new_count);
-        $('#subtotal_' + cart_id).text('
-                   + data.subtotal);
-        $('#cart_total').text('
-                   + data.total);
+  // 向服务器发送更新请求
+  function updateCartItem(cartId, quantity) {
+    // 显示加载状态
+    const subtotalElement = document.getElementById(`subtotal_${cartId}`);
+    const totalElement = document.getElementById('cart_total');
+    subtotalElement.innerHTML = '<span class="loading">Updating...</span>';
+
+    fetch(`/cart/update${cartId}_${quantity}/`, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
       }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.ok === 1) {
+        // 更新小计
+        subtotalElement.textContent = '$' + data.subtotal.toFixed(2);
+
+        // 更新总计
+        totalElement.textContent = '$' + data.total.toFixed(2);
+      } else {
+        alert('Failed to update cart: ' + (data.message || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error updating cart:', error);
+      alert('An error occurred while updating the cart. Please try again.');
     });
   }
 
-  function delete_cart(cart_id) {
+  // 删除购物车商品
+  function deleteCartItem(cartId) {
     if (confirm('Are you sure you want to remove this item from your cart?')) {
-      $.get('/cart/delete' + cart_id + '/', function(data) {
-        if (data.ok == 1) {
-          $('#cart_' + cart_id).remove();
-          $('#cart_total').text('
-                   + data.total);
+      fetch(`/cart/delete${cartId}/`, {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok === 1) {
+          // 从DOM中移除商品行
+          document.getElementById(`cart_${cartId}`).remove();
 
-          if (data.count == 0) {
+          // 更新总计
+          document.getElementById('cart_total').textContent = '$' + data.total.toFixed(2);
+
+          // 如果购物车为空，刷新页面
+          if (data.count === 0) {
             location.reload();
           }
+        } else {
+          alert('Failed to delete item: ' + (data.message || 'Unknown error'));
         }
+      })
+      .catch(error => {
+        console.error('Error deleting cart item:', error);
+        alert('An error occurred while removing the item. Please try again.');
       });
     }
   }

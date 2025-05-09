@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
-from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,10 +15,6 @@ urlpatterns = [
     path('user/', include('apps.fm_user.urls')),
     path('cart/', include('apps.fm_cart.urls')),
     path('order/', include('apps.fm_order.urls')),
-
-    # Authentication
-    path('login/', LoginView.as_view(template_name='fm_user/login.html'), name='login_urlpattern'),
-    path('logout/', LogoutView.as_view(), name='logout_urlpattern'),
 ]
 
 if settings.DEBUG:

@@ -1,52 +1,56 @@
 {% extends 'base.html' %}
 
+{% block title %}Order History{% endblock %}
+
 {% block content %}
-    <article>
-        <div class="row">
-            <div class="offset-by-two eight columns">
-                <h2>Orders</h2>
+  <div class="row">
+    <div class="offset-by-two eight columns">
+      <h2>Orders</h2>
 
-                {% if orders %}
-                <section>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr>
-                                <td>{{ order.oid }}</td>
-                                <td>{{ order.odate }}</td>
-                                <td>{{ order.ototal }}</td>
-                                <td>{% if order.oIsPay %}Paid{% else %}Unpaid{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </section>
-                {% else %}
-                <p><em>You currently have no orders.</em></p>
-                {% endif %}
+      {% if orders %}
+      <section>
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td>{{ order.oid }}</td>
+              <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
+              <td>${{ order.ototal }}</td>
+              <td>{% if order.oIsPay %}Paid{% else %}Unpaid{% endif %}</td>
+              <td>
+                <a href="{% url 'fm_order:detail' order.oid %}" class="button">View Details</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% else %}
+      <p><em>You currently have no orders.</em></p>
+      {% endif %}
 
-                {% if paginator %}
-                <div class="pagination">
-                    {% if page.has_previous %}
-                        <a href="{% url 'fm_user:order' page.previous_page_number %}" class="button">Previous</a>
-                    {% endif %}
+      {% if paginator %}
+      <div class="pagination">
+        {% if page.has_previous %}
+          <a href="{% url 'fm_user:order' page.previous_page_number %}" class="button">Previous</a>
+        {% endif %}
 
-                    <span>Page {{ page.number }} of {{ paginator.num_pages }}</span>
+        <span>Page {{ page.number }} of {{ paginator.num_pages }}</span>
 
-                    {% if page.has_next %}
-                        <a href="{% url 'fm_user:order' page.next_page_number %}" class="button">Next</a>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </article>
+        {% if page.has_next %}
+          <a href="{% url 'fm_user:order' page.next_page_number %}" class="button">Next</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
 {% endblock %}

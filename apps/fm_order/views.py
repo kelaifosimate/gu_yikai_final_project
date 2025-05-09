@@ -3,22 +3,58 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 from decimal import Decimal
+from django.contrib import messages
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+
 from .models import OrderInfo, OrderDetailInfo
+from .forms import OrderForm, OrderDetailForm
 from apps.fm_cart.models import CartInfo
 from apps.fm_user.models import UserInfo
 from apps.fm_goods.models import GoodsInfo
 from apps.fm_user.user_decorator import login
 
 
+class OrderList(ListView):
+    model = OrderInfo
+    template_name = 'fm_order/order_list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+
+    def get_queryset(self):
+        user_id = self.request.session.get('user_id')
+        return OrderInfo.objects.filter(user_id=user_id).order_by('-odate')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Order History'
+        return context
+
+
+class OrderDetail(DetailView):
+    model = OrderInfo
+    template_name = 'fm_order/order_detail.html'
+    context_object_name = 'order'
+    pk_url_kwarg = 'order_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.get_object()
+        context['title'] = f'Order #{order.oid}'
+        context['order_items'] = order.details.all()
+        return context
+
+
 @login
-def order(request):
+def order_checkout(request):
     """Show checkout page"""
     uid = request.session.get('user_id')
     user = UserInfo.objects.get(id=uid)
 
-    # Get cart items
-    carts = CartInfo.objects.filter(user_id=uid)
+    # Get cart items (fresh query to ensure latest data)
+    carts = CartInfo.objects.filter(user_id=uid).select_related('goods')
     if not carts.exists():
+        messages.warning(request, "Your cart is empty.")
         return redirect('fm_cart:cart')
 
     # Calculate totals
@@ -35,7 +71,7 @@ def order(request):
         'total_with_shipping': total_with_shipping,
     }
 
-    return render(request, 'fm_order/order.html', context)
+    return render(request, 'fm_order/place_order.html', context)
 
 
 @login
@@ -94,63 +130,20 @@ def order_handle(request):
 
         # Commit transaction
         transaction.savepoint_commit(savepoint)
-        return JsonResponse({'ok': 1})
+
+        # For non-AJAX requests, redirect to homepage
+        if request.headers.get('x-requested-with') != 'XMLHttpRequest':
+            from django.shortcuts import redirect
+            messages.success(request, "Order placed successfully!")
+            return redirect('fm_goods:index')
+
+        # For AJAX requests, return JSON response
+        return JsonResponse({'ok': 1, 'redirect': '/'})
 
     except Exception as e:
         # Rollback transaction
         transaction.savepoint_rollback(savepoint)
         return JsonResponse({'ok': 0, 'message': str(e)})
-
-
-@login
-def order_list(request, page=1):
-    """Show order history"""
-    uid = request.session.get('user_id')
-    user = UserInfo.objects.get(id=uid)
-
-    # Get orders
-    orders = OrderInfo.objects.filter(user_id=uid).order_by('-odate')
-
-    # Paginate
-    from django.core.paginator import Paginator
-    paginator = Paginator(orders, 5)  # 5 orders per page
-
-    try:
-        page_obj = paginator.page(page)
-    except:
-        page_obj = paginator.page(1)
-
-    context = {
-        'title': 'Order History',
-        'user': user,
-        'orders': page_obj.object_list,
-        'page': page_obj,
-        'paginator': paginator,
-    }
-
-    return render(request, 'fm_order/order_list.html', context)
-
-
-@login
-def order_detail(request, order_id):
-    """Show order details"""
-    uid = request.session.get('user_id')
-    user = UserInfo.objects.get(id=uid)
-
-    # Get order
-    order = get_object_or_404(OrderInfo, oid=order_id, user_id=uid)
-
-    # Get order items
-    order_items = OrderDetailInfo.objects.filter(order=order)
-
-    context = {
-        'title': 'Order Details',
-        'user': user,
-        'order': order,
-        'order_items': order_items,
-    }
-
-    return render(request, 'fm_order/order_detail.html', context)
 
 
 @login

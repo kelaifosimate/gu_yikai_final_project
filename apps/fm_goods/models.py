@@ -1,14 +1,5 @@
 from django.db import models
-
-class TypeInfo(models.Model):
-    ttitle = models.CharField(max_length=20, verbose_name="Category")
-
-    class Meta:
-        verbose_name = "Product Type"
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.ttitle
+from django.urls import reverse
 
 
 class GoodsInfo(models.Model):
@@ -20,11 +11,20 @@ class GoodsInfo(models.Model):
     gjianjie = models.CharField(max_length=200, verbose_name="Brief Introduction")
     gkucun = models.IntegerField(verbose_name="Inventory", default=0)
     gcontent = models.TextField(max_length=500, verbose_name="Details")
-    gtype = models.ForeignKey(TypeInfo, on_delete=models.CASCADE, verbose_name="Category")
 
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = verbose_name
+        ordering = ['gtitle']
 
     def __str__(self):
         return self.gtitle
+
+    def get_absolute_url(self):
+        return reverse('fm_goods:detail', kwargs={'goods_id': self.pk})
+
+    def get_update_url(self):
+        return reverse('fm_goods:edit_product', kwargs={'goods_id': self.pk})
+
+    def get_delete_url(self):
+        return reverse('fm_goods:delete_product', kwargs={'goods_id': self.pk})

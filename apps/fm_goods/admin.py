@@ -1,11 +1,5 @@
 from django.contrib import admin
-from .models import TypeInfo, GoodsInfo
-
-class TypeInfoAdmin(admin.ModelAdmin):
-    list_display = ['id', 'ttitle']
-    list_per_page = 10
-    search_fields = ['ttitle']
-    list_display_links = ['ttitle']
+from .models import GoodsInfo
 
 class GoodsInfoAdmin(admin.ModelAdmin):
     list_per_page = 20
@@ -15,5 +9,4 @@ class GoodsInfoAdmin(admin.ModelAdmin):
     search_fields = ['gtitle', 'gjianjie']
     list_display_links = ['gtitle']
 
-admin.site.register(TypeInfo, TypeInfoAdmin)
 admin.site.register(GoodsInfo, GoodsInfoAdmin)

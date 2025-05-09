@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import CartInfo
 from apps.fm_goods.models import GoodsInfo
 from apps.fm_user.models import UserInfo
@@ -49,8 +49,8 @@ def add(request, goods_id, count=1):
 
     cart_item.save()
 
-    # Return cart count for AJAX requests
-    if request.is_ajax():
+    # Check if request is AJAX - modern way
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         cart_count = CartInfo.objects.filter(user_id=uid).count()
         return JsonResponse({'ok': 1, 'count': cart_count})
 
@@ -62,7 +62,7 @@ def add(request, goods_id, count=1):
 def update(request, cart_id, count):
     """Update item quantity in cart"""
     cart_id = int(cart_id)
-    count = int(count)
+    count = max(1, int(count))  # Ensure count is at least 1
 
     try:
         cart_item = CartInfo.objects.get(id=cart_id)
@@ -71,9 +71,11 @@ def update(request, cart_id, count):
         if count > cart_item.goods.gkucun:
             count = cart_item.goods.gkucun
 
-        # Update count
-        cart_item.count = count
-        cart_item.save()
+        # Only update if count has changed
+        if cart_item.count != count:
+            # Update count
+            cart_item.count = count
+            cart_item.save()
 
         # Calculate new subtotal
         subtotal = float(cart_item.goods.gprice) * count
@@ -87,9 +89,12 @@ def update(request, cart_id, count):
             'ok': 1,
             'subtotal': subtotal,
             'total': total,
+            'count': count,
         })
     except CartInfo.DoesNotExist:
-        return JsonResponse({'ok': 0})
+        return JsonResponse({'ok': 0, 'message': 'Cart item not found'})
+    except Exception as e:
+        return JsonResponse({'ok': 0, 'message': str(e)})
 
 
 @login

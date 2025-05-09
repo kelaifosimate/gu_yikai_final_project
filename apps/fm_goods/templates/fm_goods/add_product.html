@@ -10,40 +10,39 @@
     
     <form method="post" enctype="multipart/form-data" action="{% url 'fm_goods:add_product_handle' %}">
       {% csrf_token %}
-      <input type="hidden" name="type_id" value="{{ type_id }}">
-      
+
       <p>
         <label for="gtitle">Product Name:</label>
         <input type="text" name="gtitle" id="gtitle" required>
       </p>
-      
+
       <p>
         <label for="gprice">Price:</label>
         <input type="number" name="gprice" id="gprice" step="0.01" min="0" required>
       </p>
-      
+
       <p>
         <label for="gkucun">Inventory:</label>
         <input type="number" name="gkucun" id="gkucun" min="0" required>
       </p>
-      
+
       <p>
         <label for="gjianjie">Brief Description:</label>
         <textarea name="gjianjie" id="gjianjie" rows="3" required></textarea>
       </p>
-      
+
       <p>
         <label for="gcontent">Detailed Description:</label>
         <textarea name="gcontent" id="gcontent" rows="5" required></textarea>
       </p>
-      
+
       <p>
         <label for="gpic">Product Image:</label>
-        <input type="file" name="gpic" id="gpic" required>
+        <input type="file" name="gpic" id="gpic">
       </p>
-      
+
       <button type="submit" class="button button-primary">Add Product</button>
-      <a href="javascript:history.back()" class="button">Cancel</a>
+      <a href="{% url 'fm_goods:list' %}" class="button">Cancel</a>
     </form>
   </div>
 </div>

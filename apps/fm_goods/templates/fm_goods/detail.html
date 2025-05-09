@@ -60,11 +60,11 @@
         </div>
       </section>
 
-      {% if news %}
+      {% if recommended %}
       <section class="related-products">
-        <h3>Related Products</h3>
+        <h3>You May Also Like</h3>
         <ul class="related-products-list">
-          {% for item in news %}
+          {% for item in recommended %}
           <li class="related-product">
             <a href="{% url 'fm_goods:detail' item.id %}">
               <img src="{{ MEDIA_URL }}{{ item.gpic }}" alt="{{ item.gtitle }}" class="related-product-image">
@@ -125,15 +125,25 @@
 
     $('#add_cart').click(function() {
       var num = parseInt($('.num_show').val());
-      $.get('/cart/add{{ goods.id }}_' + num + '/', function(data) {
-        alert('Product added to cart!');
+      $.ajax({
+        url: '/cart/add{{ goods.id }}_' + num + '/',
+        type: 'GET',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        success: function(data) {
+          alert('Product added to cart!');
+        }
       });
     });
 
     $('#buy_now').click(function() {
       var num = parseInt($('.num_show').val());
-      $.get('/cart/add{{ goods.id }}_' + num + '/', function(data) {
-        window.location.href = '/cart/';
+      $.ajax({
+        url: '/cart/add{{ goods.id }}_' + num + '/',
+        type: 'GET',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        success: function(data) {
+          window.location.href = '/cart/';
+        }
       });
     });
   });

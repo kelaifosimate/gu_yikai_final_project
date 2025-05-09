@@ -81,40 +81,17 @@
 
       <section class="order-actions">
         {% if user.ushou and user.uaddress and user.uphone %}
-        <button id="place_order" class="button button-primary">Place Order</button>
+        <form action="{% url 'fm_order:handle' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="total" value="{{ total_with_shipping }}">
+          <button type="submit" class="button button-primary">Place Order</button>
+          <a href="{% url 'fm_cart:cart' %}" class="button">Return to Cart</a>
+        </form>
         {% else %}
         <button class="button button-primary" disabled>Place Order</button>
-        {% endif %}
         <a href="{% url 'fm_cart:cart' %}" class="button">Return to Cart</a>
+        {% endif %}
       </section>
     </div>
   </div>
-{% endblock %}
-
-{% block head %}
-<script type="text/javascript">
-  $(function() {
-    $('#place_order').click(function() {
-      $.ajax({
-        url: '{% url "fm_order:handle" %}',
-        type: 'POST',
-        data: {
-          'csrfmiddlewaretoken': '{{ csrf_token }}',
-          'total': '{{ total_with_shipping }}'
-        },
-        success: function(data) {
-          if (data.ok == 1) {
-            alert('Order placed successfully!');
-            window.location.href = '{% url "fm_user:order" 1 %}';
-          } else {
-            alert('Error: ' + data.message);
-          }
-        },
-        error: function() {
-          alert('An error occurred. Please try again.');
-        }
-      });
-    });
-  });
-</script>
 {% endblock %}
