@@ -1,78 +1,128 @@
-{% extends 'base_foot.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block body %}
-    <div class="header_con" id="header_con">
-		<div class="header">
-			<div class="welcome fl">Welcome to Flea Market!</div>
-			<div class="fr">
-{#                Check if already logged in #}
-                {% if request.session.user_name|default:'' != '' %}
-{#                    that is, when user is logged in, show username #}
-				<div class="login_btn fl">
-                    <img class="img-circle" align="center" src="{{ MEDIA_URL }}{{ user.ulogo|default:'' }}" alt="avatar"/>
-                    <font color="#ff4500">{{ request.session.user_name }}</font>
-				</div>
-                <div class="login_btn fl">
-                    <span>|</span>
-                    <em><a href="{% url "fm_user:logout" %}">Logout</a></em>
-				</div>
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {% block title %}
+            title is provided by inheriting templates
+        {% endblock %}
+    </title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'courseinfo/normalize.css' %}">
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'courseinfo/skeleton.css' %}">
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'courseinfo/style.css' %}">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+
+<div class="container">
+    <div class="status row">
+        <div class="offset-by-eight four columns">
+            <ul class="inline">
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'fm_user:logout' %}">
+                        Log Out, {{ user.uname }}</a></li>
                 {% else %}
-				<div class="login_btn fl">
-					<a href="{% url "fm_user:login" %}">Login</a>
-					<span>|</span>
-					<a href="{% url "fm_user:register" %}">Register</a>
-				</div>
+                    <li><a href="{% url 'fm_user:login' %}">
+                        Log In</a></li>
                 {% endif %}
-				<div class="user_link fl">
-					<span>|</span>
-					<a href="{% url "fm_user:info" %}">User Center</a>
-                    <span>|</span>
-					<a href="{% url "fm_user:message" %}">Message Center</a>
-					<span>|</span>
-					<a href="{% url "fm_cart:cart" %}">My Cart</a>
-					<span>|</span>
-					<a href="{% url "fm_user:order" 1 %}">My Orders</a>
-				</div>
-			</div>
-		</div>
-	</div>
-
-    <div class="search_bar clearfix">
-		<a href="/" class="logo fl"><img src="{% static 'images/logo1.png' %}" alt="Logo"></a>
-		<div class="search_con fl">
-             <script>
-                $(function () {
-                    $('.input_btn').click(function () {
-                        q = $('.input_text').val();
-                        if(q==""){
-                        alert("Please enter search content");
-                        }
-                        else{
-                            location.href = '{% url "fm_goods:ordinary_search" %}?q='+q+'&page=1'
-                        }
-                    })
-                })
-            </script>
-			<input type="text" class="input_text fl" name="q" placeholder="Search for products">
-			<input type="button" class="input_btn fr" name="" value="Search">
-		</div>
-
-        {% if guest_cart == 1 %}
-            <div class="guest_cart fr">
-                <a href="{% url "fm_cart:cart" %}" class="cart_name fl">My Cart</a>
-                <div class="goods_count fl" id="show_count">{{ cart_num|default:'0' }}</div>
+            </ul>
+        </div>
+    </div>
+    <header class="row">
+        <div class="offset-by-one ten columns">
+            <h1 class="logo">Flea Market</h1>
+            <h2>Product Information System</h2>
+        </div>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="{% url 'fm_goods:index' %}">Home</a></li>
+            {% if request.session.user_id %}
+                <li><a href="{% url 'fm_user:info' %}">User Center</a></li>
+                <li><a href="{% url 'fm_cart:cart' %}">Shopping Cart</a></li>
+                <li><a href="{% url 'fm_user:order' 1 %}">Orders</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <main>
+        {% block content %}
+            <div class="row">
+                <section class="eight columns">
+                    {% block org_content %}
+                        This is default content!
+                    {% endblock %}
+                </section>
+                <section class="desktop four columns">
+                    {% block create_button %}{% endblock %}
+                </section>
             </div>
-        {% else %}
-            <div class="guest_cart fr">
-                <a href="{% url "fm_cart:cart" %}" class="cart_name fl">My Cart</a>
-                <div class="goods_count fl" id="show_count">0</div>
+            <div class="row">
+                <div class="twelve columns">
+                    {% block content_footer %}{% endblock %}
+                </div>
             </div>
-        {% endif %}
-	</div>
-{% block content %}
-{% endblock content %}
-{% block center_body %}
-{% endblock center_body %}
+        {% endblock %}
+    </main>
+    {% if is_paginated %}
+        <div class="row">
+            <div class="twelve columns">
+                <ul class="pagination">
+                    {% if first_page_url %}
+                        <li>
+                            <a href="{{ first_page_url }}">
+                                First</a>
+                        </li>
+                    {% endif %}
+                    {% if previous_page_url %}
+                        <li>
+                            <a href="{{ previous_page_url }}">
+                                Previous</a>
+                        </li>
+                    {% endif %}
+                    <li>
+                        Page {{ page_obj.number }}
+                        of {{ paginator.num_pages }}
+                    </li>
+                    {% if next_page_url %}
+                        <li>
+                            <a href="{{ next_page_url }}">
+                                Next</a>
+                        </li>
+                    {% endif %}
+                    {% if last_page_url %}
+                        <li>
+                            <a href="{{ last_page_url }}">
+                                Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div><!-- container -->
 
-{% endblock body %}
+<footer>
+    <p>
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <img alt="Creative Commons License" style="border-width:0"
+                 src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png"/>
+        </a><br/><span property="dct:title">Flea Market</span>
+        by
+        <a property="cc:attributionName"
+           rel="cc:attributionURL">Your Name</a> is licensed under a
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike
+            4.0 International License</a>.
+    </p>
+</footer>
+
+</body>
+
+</html>

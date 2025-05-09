@@ -1,102 +1,28 @@
-{% extends 'base_foot.html' %}
-{% load static %}
+{% extends 'base.html' %}
 
-{% block head %}
-<script>
-    $(function () {
-        name_error = false;
-        pwd_error = false;
-        vc_error = false;
+{% block title %}Login{% endblock %}
 
-        if({{ error_name|default:0 }}==1){
-            $('.user_error').html('Username error').show();
-        }
-        if({{ error_pwd|default:0 }}==1){
-            $('.pwd_error').html('Password error').show();
-        }
-        if({{ error_vc|default:0 }}==1){
-            $('.vc_error').html('Verification code error').show();
-        }
-        $('.name_input').blur(function () {
-            if($('.name_input').val().length==0){
-                $('.user_error').html('Please enter username').show();
-                name_error = false;
-            }else{
-                $('.user_error').hide();
-                name_error = true;
-            }
-        });
-        $('.pass_input').blur(function () {
-            if($('.pass_input').val().length==0){
-                $('.pwd_error').html('Please enter password').show();
-                pwd_error = false;
-            }else{
-                $('.pwd_error').hide();
-                pwd_error = true;
-            }
-        });
-        $('.vc_input').blur(function () {
-            if($('.vc_input').val().length==0){
-                $('.vc_error').html('Please enter verification code').show();
-                vc_error = false;
-            }else{
-                $('.vc_error').hide();
-                vc_error = true;
-            }
-        });
-    })
-</script>
-{% endblock head %}
-
-{% block body %}
-	<div class="login_top clearfix">
-		<a href="{% url "fm_goods:index" %}" class="login_logo"><img src="{% static 'images/logo_banner2.png' %}" style="width: 300px;height:100px;overflow: hidden;object-fit: cover;"></a>
-	</div>
-
-	<div class="login_form_bg">
-		<div class="login_form_wrap clearfix">
-			<div class="login_banner fl"><img src="{% static 'images/timg[2].png' %}" alt=""></div>
-			<div class="slogan fl">Find Treasures · Pre-Loved Items</div>
-			<div class="login_form fr">
-				<div class="login_title clearfix">
-					<h1>User Login</h1>
-					<a href="{% url "fm_user:register" %}">Register Now</a>
-				</div>
-				<div class="form_input">
-					<form action="{% url "fm_user:login_handle" %}" method="post">
-                        {% csrf_token %}
-						<input type="text" name="username" class="name_input" value="{{ username|default:'' }}" placeholder="Please enter username">
-						<div class="user_error">Input error</div>
-						<input type="password" name="pwd" class="pass_input" value="{{ password|default:'' }}" placeholder="Please enter password">
-						<div class="pwd_error">Input error</div>
-                        <input type="text" name="vc" class="vc_input" placeholder="Please enter verification code">
-                        <div class="vc_error">Input error</div>
-                        <img id='verifycode' src="/user/verifycode/?1" alt="CheckCode"/>
-                        <span id='verifycodeChange' aria-placeholder="Can't see clearly? Change one"></span>
-						<div class="more_input clearfix">
-							<input type="checkbox" name="jizhu" value="1" checked="checked">
-							<label>Remember username</label>
-							<a href="{% url "fm_user:findpwdView" %}">Forgot password</a>
-						</div>
-						<input type="submit" name="" value="Login" class="input_submit">
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-<script type="text/javascript">
-    $(function(){
-        $('#verifycodeChange').css('cursor','pointer').click(function() {
-            $('#verifycode').attr('src',$('#verifycode').attr('src')+1)
-        });
-    });
-</script>
-{#  Pop-up prompt  #}
-    {% if messages %}
-    <script>
-        {% for msg in messages %}
-            alert('{{ msg.message }}');
-        {% endfor %}
-    </script>
-    {% endif %}
-{% endblock body %}
+{% block content %}
+  <h2>Login</h2>
+  <form method="post" action="{% url 'fm_user:login_handle' %}">
+    {% csrf_token %}
+    <p>
+      <label for="username">Username:</label>
+      <input type="text" name="username" id="username" value="{{ username }}">
+    </p>
+    <p>
+      <label for="pwd">Password:</label>
+      <input type="password" name="pwd" id="pwd" value="{{ password }}">
+    </p>
+    <p>
+      <input type="checkbox" name="jizhu" id="jizhu" value="1" checked="checked">
+      <label for="jizhu">Remember username</label>
+    </p>
+    <button type="submit" class="button button-primary">
+      Login
+    </button>
+    <p>
+      <a href="{% url 'fm_user:register' %}">Register Now</a>
+    </p>
+  </form>
+{% endblock %}
