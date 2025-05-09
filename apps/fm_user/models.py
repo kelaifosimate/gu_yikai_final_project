@@ -4,9 +4,9 @@ from django.db import models
 class UserInfo(models.Model):
     uname = models.CharField(max_length=20, verbose_name="Username", unique=True)
     upwd = models.CharField(max_length=40, verbose_name="Password", blank=False)
-    uemail = models.EmailField(verbose_name="Email", unique=True)
+    uemail = models.EmailField(verbose_name="Email", unique=True, null=True, blank=True)
+    usex = models.CharField(max_length=10, default="", verbose_name="Gender")
 
-    # Basic address information (simplified from original)
     ushou = models.CharField(max_length=20, default="", verbose_name="Recipient Name")
     uaddress = models.CharField(max_length=100, default="", verbose_name="Address")
     uyoubian = models.CharField(max_length=6, default="", verbose_name="Postal Code")

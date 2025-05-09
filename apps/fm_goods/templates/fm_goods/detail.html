@@ -1,66 +1,141 @@
-{% extends 'fm_goods/base.html' %}
+{% extends 'base.html' %}
+
+{% block title %}{{ goods.gtitle }} - Details{% endblock %}
 
 {% block content %}
-    <article>
-        <div class="row">
-            <div class="offset-by-two eight columns">
-                <h2>{{ goods.gtitle }}</h2>
-                <div class="row">
-                    <div class="six columns">
-                        <img src="{{ MEDIA_URL }}{{ goods.gpic }}" style="width: 100%; max-width: 300px;">
-                    </div>
-                    <div class="six columns">
-                        <table>
-                            <tr>
-                                <th>Price:</th>
-                                <td>${{ goods.gprice }}</td>
-                            </tr>
-                            <tr>
-                                <th>Seller:</th>
-                                <td>{{ goods.gunit }}</td>
-                            </tr>
-                            <tr>
-                                <th>Available:</th>
-                                <td>{{ goods.gkucun }} items</td>
-                            </tr>
-                            <tr>
-                                <th>Description:</th>
-                                <td>{{ goods.gjianjie }}</td>
-                            </tr>
-                        </table>
+  <div class="row">
+    <div class="offset-by-two eight columns">
+      <h2>{{ goods.gtitle }}</h2>
 
-                        {% if user %}
-                        <div style="margin-top: 20px;">
-                            <a href="/cart/add{{ goods.id }}_1/" class="button button-primary">Add to Cart</a>
-                        </div>
-                        {% else %}
-                        <div style="margin-top: 20px;">
-                            <a href="{% url 'fm_user:login' %}" class="button button-primary">Login to Purchase</a>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <h3>Details</h3>
-                    <p>{{ goods.gcontent }}</p>
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <h3>You May Also Like</h3>
-                    <ul class="inline">
-                        {% for item in news %}
-                        <li style="margin-right: 20px; display: inline-block;">
-                            <a href="/detail/{{ item.id }}/">
-                                <img src="{{ MEDIA_URL }}{{ item.gpic }}" style="width: 100px; height: 100px; object-fit: cover;">
-                                <br>
-                                {{ item.gtitle }}
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
+      <div class="row">
+        <div class="six columns">
+          <img src="{{ MEDIA_URL }}{{ goods.gpic }}" alt="{{ goods.gtitle }}" class="product-detail-image">
         </div>
-    </article>
+        <div class="six columns">
+          <section>
+            <table>
+              <tr>
+                <th>Price:</th>
+                <td>${{ goods.gprice }}</td>
+              </tr>
+              <tr>
+                <th>Seller:</th>
+                <td>{{ goods.gunit }}</td>
+              </tr>
+              <tr>
+                <th>Inventory:</th>
+                <td><span class="inventory">{{ goods.gkucun }}</span> items</td>
+              </tr>
+            </table>
+          </section>
+
+          <section class="product-quantity">
+            <h4>Quantity:</h4>
+            <div class="quantity-control">
+              <a href="javascript:minus();" class="button quantity-button">-</a>
+              <input type="text" class="num_show" value="1">
+              <a href="javascript:plus();" class="button quantity-button">+</a>
+            </div>
+            <div class="total-price">
+              Total: <span id="gtotal">${{ goods.gprice }}</span>
+            </div>
+          </section>
+
+          <section class="product-actions">
+            {% if request.session.user_name|default:'' != '' %}
+              <a href="javascript:;" class="button button-primary" id="add_cart">Add to Cart</a>
+              <a href="javascript:;" class="button button-primary" id="buy_now">Buy Now</a>
+            {% else %}
+              <a href="{% url 'fm_user:login' %}" class="button button-primary">Login to Purchase</a>
+            {% endif %}
+          </section>
+        </div>
+      </div>
+
+      <section class="product-description">
+        <h3>Product Description</h3>
+        <p>{{ goods.gjianjie }}</p>
+        <div class="detailed-content">
+          {{ goods.gcontent|safe }}
+        </div>
+      </section>
+
+      {% if news %}
+      <section class="related-products">
+        <h3>Related Products</h3>
+        <ul class="related-products-list">
+          {% for item in news %}
+          <li class="related-product">
+            <a href="{% url 'fm_goods:detail' item.id %}">
+              <img src="{{ MEDIA_URL }}{{ item.gpic }}" alt="{{ item.gtitle }}" class="related-product-image">
+              <div class="product-info">
+                <div class="product-title">{{ item.gtitle }}</div>
+                <div class="product-price">${{ item.gprice }}</div>
+              </div>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block head %}
+<script type="text/javascript">
+  function plus() {
+    var num = parseInt($('.num_show').val());
+    var kucun = parseInt($('.inventory').text());
+    if (num < kucun) {
+      $('.num_show').val(num+1);
+      updateTotal();
+    }
+  }
+
+  function minus() {
+    var num = parseInt($('.num_show').val());
+    if (num > 1) {
+      $('.num_show').val(num-1);
+      updateTotal();
+    }
+  }
+
+  function updateTotal() {
+    var num = parseInt($('.num_show').val());
+    var price = {{ goods.gprice }};
+    var total = (num * price).toFixed(2);
+    $('#gtotal').text('$' + total);
+  }
+
+  $(function() {
+    $('.num_show').on('change', function() {
+      var num = parseInt($(this).val());
+      var kucun = parseInt($('.inventory').text());
+
+      if (isNaN(num) || num < 1) {
+        num = 1;
+      } else if (num > kucun) {
+        num = kucun;
+      }
+
+      $(this).val(num);
+      updateTotal();
+    });
+
+    $('#add_cart').click(function() {
+      var num = parseInt($('.num_show').val());
+      $.get('/cart/add{{ goods.id }}_' + num + '/', function(data) {
+        alert('Product added to cart!');
+      });
+    });
+
+    $('#buy_now').click(function() {
+      var num = parseInt($('.num_show').val());
+      $.get('/cart/add{{ goods.id }}_' + num + '/', function(data) {
+        window.location.href = '/cart/';
+      });
+    });
+  });
+</script>
 {% endblock %}

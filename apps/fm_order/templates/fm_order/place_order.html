@@ -1,119 +1,120 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Checkout{% endblock %}
 
 {% block content %}
-<article>
-    <div class="row">
-        <div class="offset-by-two eight columns">
-            <h2>Checkout</h2>
-            
-            <section>
-                <h3>Shipping Address</h3>
-                <table>
-                    <tr>
-                        <th>Recipient:</th>
-                        <td>{{ user.ushou }}</td>
-                    </tr>
-                    <tr>
-                        <th>Phone:</th>
-                        <td>{{ user.uphone }}</td>
-                    </tr>
-                    <tr>
-                        <th>Address:</th>
-                        <td>{{ user.uaddress }}</td>
-                    </tr>
-                </table>
-                
-                {% if not user.ushou or not user.uphone or not user.uaddress %}
-                <p class="error_tip">
-                    Please <a href="{% url 'fm_user:site' %}">update your shipping address</a> before placing an order.
-                </p>
-                {% endif %}
-            </section>
-            
-            <section>
-                <h3>Order Items</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for cart in carts %}
-                        <tr>
-                            <td>
-                                <a href="/detail/{{ cart.goods.id }}/">
-                                    {{ cart.goods.gtitle }}
-                                </a>
-                            </td>
-                            <td>${{ cart.goods.gprice }}</td>
-                            <td>{{ cart.count }}</td>
-                            <td>${{ cart.goods.gprice|floatformat:2|mul:cart.count }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4"><em>Your cart is empty.</em></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-            
-            <section>
-                <h3>Order Summary</h3>
-                <table>
-                    <tr>
-                        <th>Subtotal:</th>
-                        <td>${{ total_price }}</td>
-                    </tr>
-                    <tr>
-                        <th>Shipping:</th>
-                        <td>${{ shipping_fee }}</td>
-                    </tr>
-                    <tr>
-                        <th>Total:</th>
-                        <td>${{ total_with_shipping }}</td>
-                    </tr>
-                </table>
-            </section>
-            
-            <div style="margin-top: 20px;">
-                {% if user.ushou and user.uphone and user.uaddress %}
-                <button id="order_btn" class="button button-primary">Place Order</button>
-                {% else %}
-                <a href="{% url 'fm_user:site' %}" class="button button-primary">Update Shipping Address</a>
-                {% endif %}
-                <a href="{% url 'fm_cart:cart' %}" class="button">Back to Cart</a>
-            </div>
-        </div>
-    </div>
-</article>
+  <div class="row">
+    <div class="offset-by-one ten columns">
+      <h2>Checkout</h2>
 
-<script>
-    $('#order_btn').click(function() {
-        $.ajax({
-            type: 'POST',
-            url: '{% url "fm_order:handle" %}',
-            data: {
-                'csrfmiddlewaretoken': '{{ csrf_token }}',
-                'total': '{{ total_with_shipping }}'
-            },
-            dataType: 'json',
-            success: function(data) {
-                if (data.ok == 1) {
-                    alert('Order placed successfully!');
-                    location.href = '{% url "fm_order:list" 1 %}';
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            },
-            error: function() {
-                alert('Network error. Please try again.');
-            }
-        });
+      <section class="shipping-address">
+        <h3>Shipping Information</h3>
+        <table>
+          <tr>
+            <th>Recipient Name:</th>
+            <td>{{ user.ushou }}</td>
+          </tr>
+          <tr>
+            <th>Address:</th>
+            <td>{{ user.uaddress }}</td>
+          </tr>
+          <tr>
+            <th>Postal Code:</th>
+            <td>{{ user.uyoubian }}</td>
+          </tr>
+          <tr>
+            <th>Phone:</th>
+            <td>{{ user.uphone }}</td>
+          </tr>
+        </table>
+
+        {% if not user.ushou or not user.uaddress or not user.uphone %}
+        <div class="warning-message">
+          <p>Please complete your shipping information before placing an order.</p>
+          <a href="{% url 'fm_user:site' %}" class="button">Update Shipping Address</a>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="order-summary">
+        <h3>Order Summary</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cart in carts %}
+            <tr>
+              <td>
+                <a href="{% url 'fm_goods:detail' cart.goods.id %}">
+                  {{ cart.goods.gtitle }}
+                </a>
+              </td>
+              <td>${{ cart.goods.gprice }}</td>
+              <td>{{ cart.count }}</td>
+              <td>${{ cart.goods.gprice|mul:cart.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"><strong>Subtotal:</strong></td>
+              <td>${{ total_price }}</td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>Shipping:</strong></td>
+              <td>${{ shipping_fee }}</td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>Total:</strong></td>
+              <td>${{ total_with_shipping }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <section class="order-actions">
+        {% if user.ushou and user.uaddress and user.uphone %}
+        <button id="place_order" class="button button-primary">Place Order</button>
+        {% else %}
+        <button class="button button-primary" disabled>Place Order</button>
+        {% endif %}
+        <a href="{% url 'fm_cart:cart' %}" class="button">Return to Cart</a>
+      </section>
+    </div>
+  </div>
+{% endblock %}
+
+{% block head %}
+<script type="text/javascript">
+  $(function() {
+    $('#place_order').click(function() {
+      $.ajax({
+        url: '{% url "fm_order:handle" %}',
+        type: 'POST',
+        data: {
+          'csrfmiddlewaretoken': '{{ csrf_token }}',
+          'total': '{{ total_with_shipping }}'
+        },
+        success: function(data) {
+          if (data.ok == 1) {
+            alert('Order placed successfully!');
+            window.location.href = '{% url "fm_user:order" 1 %}';
+          } else {
+            alert('Error: ' + data.message);
+          }
+        },
+        error: function() {
+          alert('An error occurred. Please try again.');
+        }
+      });
     });
+  });
 </script>
 {% endblock %}

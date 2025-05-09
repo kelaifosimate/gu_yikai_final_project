@@ -1,76 +1,123 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Order Details{% endblock %}
 
 {% block content %}
-<article>
-    <div class="row">
-        <div class="offset-by-two eight columns">
-            <h2>Order Details</h2>
-            
-            <section>
-                <h3>Order Information</h3>
-                <table>
-                    <tr>
-                        <th>Order Number:</th>
-                        <td>{{ order.oid }}</td>
-                    </tr>
-                    <tr>
-                        <th>Date:</th>
-                        <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th>
-                        <td>
-                            {% if order.oIsPay %}
-                            <span class="status-paid">Paid</span>
-                            {% else %}
-                            <span class="status-unpaid">Unpaid</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Total:</th>
-                        <td>${{ order.ototal }}</td>
-                    </tr>
-                </table>
-            </section>
-            
-            <section>
-                <h3>Shipping Address</h3>
-                <p>{{ order.oaddress }}</p>
-            </section>
-            
-            <section>
-                <h3>Order Items</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for detail in details %}
-                        <tr>
-                            <td>
-                                <a href="/detail/{{ detail.goods.id }}/">
-                                    {{ detail.goods.gtitle }}
-                                </a>
-                            </td>
-                            <td>${{ detail.price }}</td>
-                            <td>{{ detail.count }}</td>
-                            <td>${{ detail.price|floatformat:2|mul:detail.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-            
-            <div style="margin-top: 20px;">
-                <a href="{% url 'fm_order:list' 1 %}" class="button">Back to Orders</a>
-            </div>
-        </div>
+  <div class="row">
+    <div class="offset-by-one ten columns">
+      <h2>Order Details</h2>
+
+      <section class="order-info">
+        <h3>Order Information</h3>
+        <table>
+          <tr>
+            <th>Order Number:</th>
+            <td>{{ order.oid }}</td>
+          </tr>
+          <tr>
+            <th>Date:</th>
+            <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
+          </tr>
+          <tr>
+            <th>Status:</th>
+            <td>
+              {% if order.oIsPay %}
+              <span class="status-paid">Paid</span>
+              {% else %}
+              <span class="status-unpaid">Unpaid</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th>Total:</th>
+            <td>${{ order.ototal }}</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="shipping-info">
+        <h3>Shipping Information</h3>
+        <table>
+          <tr>
+            <th>Recipient:</th>
+            <td>{{ user.ushou }}</td>
+          </tr>
+          <tr>
+            <th>Address:</th>
+            <td>{{ order.oaddress }}</td>
+          </tr>
+          <tr>
+            <th>Phone:</th>
+            <td>{{ user.uphone }}</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="order-items">
+        <h3>Order Items</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order_items %}
+            <tr>
+              <td>
+                <a href="{% url 'fm_goods:detail' item.goods.id %}">
+                  {{ item.goods.gtitle }}
+                </a>
+              </td>
+              <td>${{ item.price }}</td>
+              <td>{{ item.count }}</td>
+              <td>${{ item.price|mul:item.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      <a href="{% url 'fm_user:order' 1 %}" class="button">Back to Orders</a>
+
+      {% if not order.oIsPay %}
+      <a href="javascript:void(0);" id="pay_order" class="button button-primary">Pay Now</a>
+      {% endif %}
     </div>
-</article>
+  </div>
+{% endblock %}
+
+{% block head %}
+{% if not order.oIsPay %}
+<script type="text/javascript">
+  $(function() {
+    $('#pay_order').click(function() {
+      if (confirm('Proceed with payment for this order?')) {
+        $.ajax({
+          url: '{% url "fm_order:pay" order.oid %}',
+          type: 'POST',
+          data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          success: function(data) {
+            if (data.ok == 1) {
+              alert('Payment successful!');
+              location.reload();
+            } else {
+              alert('Payment failed: ' + data.message);
+            }
+          },
+          error: function() {
+            alert('An error occurred. Please try again.');
+          }
+        });
+      }
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}

@@ -7,4 +7,4 @@ def mul(value, arg):
     try:
         return float(value) * float(arg)
     except (ValueError, TypeError):
-        return ''
+        return 0

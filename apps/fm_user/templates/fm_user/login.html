@@ -3,26 +3,39 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-  <h2>Login</h2>
-  <form method="post" action="{% url 'fm_user:login_handle' %}">
-    {% csrf_token %}
-    <p>
-      <label for="username">Username:</label>
-      <input type="text" name="username" id="username" value="{{ username }}">
-    </p>
-    <p>
-      <label for="pwd">Password:</label>
-      <input type="password" name="pwd" id="pwd" value="{{ password }}">
-    </p>
-    <p>
-      <input type="checkbox" name="jizhu" id="jizhu" value="1" checked="checked">
-      <label for="jizhu">Remember username</label>
-    </p>
-    <button type="submit" class="button button-primary">
-      Login
-    </button>
-    <p>
-      <a href="{% url 'fm_user:register' %}">Register Now</a>
-    </p>
-  </form>
+  <div class="row">
+    <div class="offset-by-three six columns">
+      <h2>Login</h2>
+
+      {% if error_name == 1 %}
+        <p class="error_tip">Username does not exist, please try again</p>
+      {% endif %}
+
+      {% if error_pwd == 1 %}
+        <p class="error_tip">Password is incorrect, please try again</p>
+      {% endif %}
+
+      <form method="post" action="{% url 'fm_user:login_handle' %}">
+        {% csrf_token %}
+        <p>
+          <label for="username">Username:</label>
+          <input type="text" name="username" id="username" value="{{ uname }}">
+        </p>
+        <p>
+          <label for="pwd">Password:</label>
+          <input type="password" name="pwd" id="pwd" value="{{ upwd }}">
+        </p>
+        <p>
+          <input type="checkbox" name="jizhu" id="jizhu" value="1" {% if uname %}checked="checked"{% endif %}>
+          <label for="jizhu">Remember username</label>
+        </p>
+        <button type="submit" class="button button-primary">
+          Login
+        </button>
+        <p>
+          <a href="{% url 'fm_user:register' %}">Register Now</a>
+        </p>
+      </form>
+    </div>
+  </div>
 {% endblock %}

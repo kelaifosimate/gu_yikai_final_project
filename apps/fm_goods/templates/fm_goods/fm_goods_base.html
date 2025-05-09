@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="navbar_con">
+        <div class="navbar clearfix">
+            <div class="subnav_con fl">
+                <h1>All Product Categories</h1>
+                <span></span>
+                <ul class="subnav">
+                    <li><a href="/list1_1_1" class="fruit">Books</a></li>
+                    <li><a href="/list2_1_1" class="seafood">Electronics</a></li>
+                    <li><a href="/list3_1_1" class="meet">Clothing</a></li>
+                    <li><a href="/list4_1_1" class="egg">Transportation</a></li>
+                    <li><a href="/list5_1_1" class="vegetables">Instruments</a></li>
+                    <li><a href="/list6_1_1" class="ice">Smart Devices</a></li>
+                </ul>
+            </div>
+            <ul class="navlist fl">
+                <li><a href="{% url 'fm_goods:index' %}">Home</a></li>
+                <li class="interval">|</li>
+                <li><a href="">Flea Market Mobile App</a></li>
+                <li class="interval">|</li>
+                <li><a href="">Lottery</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="breadcrumb">
+        All Categories {% if title %}> {{ title }}{% endif %}
+        {% if id|default:' ' != ' ' %}
+        > Product Details
+        {% endif %}
+    </div>
+
+    {% block center_content %}
+        <!-- Content will be inserted by child templates -->
+    {% endblock center_content %}
+{% endblock content %}

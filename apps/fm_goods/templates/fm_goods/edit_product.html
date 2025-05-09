@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="offset-by-two eight columns">
+    <h2>Edit Product</h2>
+    
+    <form method="post" enctype="multipart/form-data" action="{% url 'fm_goods:edit_product_handle' product.id %}">
+      {% csrf_token %}
+      
+      <p>
+        <label for="gtitle">Product Name:</label>
+        <input type="text" name="gtitle" id="gtitle" value="{{ product.gtitle }}" required>
+      </p>
+      
+      <p>
+        <label for="gprice">Price:</label>
+        <input type="number" name="gprice" id="gprice" step="0.01" min="0" value="{{ product.gprice }}" required>
+      </p>
+      
+      <p>
+        <label for="gkucun">Inventory:</label>
+        <input type="number" name="gkucun" id="gkucun" min="0" value="{{ product.gkucun }}" required>
+      </p>
+      
+      <p>
+        <label for="gjianjie">Brief Description:</label>
+        <textarea name="gjianjie" id="gjianjie" rows="3" required>{{ product.gjianjie }}</textarea>
+      </p>
+      
+      <p>
+        <label for="gcontent">Detailed Description:</label>
+        <textarea name="gcontent" id="gcontent" rows="5" required>{{ product.gcontent }}</textarea>
+      </p>
+      
+      <p>
+        <label for="gpic">Product Image:</label>
+        {% if product.gpic %}
+        <div class="current-image">
+          <img src="{{ MEDIA_URL }}{{ product.gpic }}" alt="{{ product.gtitle }}" style="max-width: 200px; margin-bottom: 10px;">
+          <br><small>Current image. Upload a new one to replace it.</small>
+        </div>
+        {% endif %}
+        <input type="file" name="gpic" id="gpic">
+      </p>
+      
+      <button type="submit" class="button button-primary">Update Product</button>
+      <a href="javascript:history.back()" class="button">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,53 +1,69 @@
 {% extends 'base.html' %}
 
-{% block content %}
-    <article>
-        <div class="row">
-            <div class="offset-by-two eight columns">
-                <h2>Shipping Address</h2>
-                <section>
-                    <table>
-                        <tr>
-                            <th>Recipient Name:</th>
-                            <td>{{ user.ushou }}</td>
-                        </tr>
-                        <tr>
-                            <th>Phone:</th>
-                            <td>{{ user.uphone }}</td>
-                        </tr>
-                        <tr>
-                            <th>Current Address:</th>
-                            <td>{{ user.uaddress }}</td>
-                        </tr>
-                        <tr>
-                            <th>Postal Code:</th>
-                            <td>{{ user.uyoubian }}</td>
-                        </tr>
-                    </table>
-                </section>
+{% block title %}Update Shipping Address{% endblock %}
 
-                <h3>Edit Address</h3>
-                <form action="{% url 'fm_user:site' %}" method="post">
-                    {% csrf_token %}
-                    <p>
-                        <label for="ushou">Recipient Name:</label>
-                        <input type="text" name="ushou" id="ushou" value="{{ user.ushou }}">
-                    </p>
-                    <p>
-                        <label for="uphone">Phone:</label>
-                        <input type="text" name="uphone" id="uphone" value="{{ user.uphone }}">
-                    </p>
-                    <p>
-                        <label for="uyoubian">Postal Code:</label>
-                        <input type="text" name="uyoubian" id="uyoubian" value="{{ user.uyoubian }}">
-                    </p>
-                    <p>
-                        <label for="uaddress">Detailed Address:</label>
-                        <textarea name="uaddress" id="uaddress">{{ user.uaddress }}</textarea>
-                    </p>
-                    <button type="submit" class="button button-primary">Update Address</button>
-                </form>
-            </div>
-        </div>
-    </article>
+{% block content %}
+  <div class="row">
+    <div class="offset-by-two eight columns">
+      <h2>Shipping Address</h2>
+
+      <section class="current-address">
+        <h3>Current Address Information</h3>
+        <table>
+          {% if user.ushou %}
+          <tr>
+            <th>Recipient Name:</th>
+            <td>{{ user.ushou }}</td>
+          </tr>
+          {% endif %}
+          {% if user.uaddress %}
+          <tr>
+            <th>Address:</th>
+            <td>{{ user.uaddress }}</td>
+          </tr>
+          {% endif %}
+          {% if user.uyoubian %}
+          <tr>
+            <th>Postal Code:</th>
+            <td>{{ user.uyoubian }}</td>
+          </tr>
+          {% endif %}
+          {% if user.uphone %}
+          <tr>
+            <th>Phone:</th>
+            <td>{{ user.uphone }}</td>
+          </tr>
+          {% endif %}
+        </table>
+
+        {% if not user.ushou and not user.uaddress and not user.uphone %}
+        <p><em>No address information on file. Please update below.</em></p>
+        {% endif %}
+      </section>
+
+      <section class="update-address">
+        <h3>Update Address</h3>
+        <form method="post" action="{% url 'fm_user:site' %}">
+          {% csrf_token %}
+          <p>
+            <label for="ushou">Recipient Name:</label>
+            <input type="text" name="ushou" id="ushou" value="{{ user.ushou }}">
+          </p>
+          <p>
+            <label for="uaddress">Address:</label>
+            <textarea name="uaddress" id="uaddress" rows="3">{{ user.uaddress }}</textarea>
+          </p>
+          <p>
+            <label for="uyoubian">Postal Code:</label>
+            <input type="text" name="uyoubian" id="uyoubian" value="{{ user.uyoubian }}">
+          </p>
+          <p>
+            <label for="uphone">Phone:</label>
+            <input type="text" name="uphone" id="uphone" value="{{ user.uphone }}">
+          </p>
+          <button type="submit" class="button button-primary">Update Address</button>
+        </form>
+      </section>
+    </div>
+  </div>
 {% endblock %}

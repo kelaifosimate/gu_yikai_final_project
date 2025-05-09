@@ -1,63 +1,109 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
-    <article>
-        <div class="row">
-            <div class="offset-by-two eight columns">
-                <h2>Your Shopping Cart</h2>
-                
-                {% if carts %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Subtotal</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for cart in carts %}
-                        <tr>
-                            <td>
-                                <a href="/detail/{{ cart.goods.id }}/">
-                                    <img src="{{ MEDIA_URL }}{{ cart.goods.gpic }}" style="width: 50px; height: 50px; object-fit: cover;">
-                                    {{ cart.goods.gtitle }}
-                                </a>
-                            </td>
-                            <td>${{ cart.goods.gprice }}</td>
-                            <td>{{ cart.count }}</td>
-                            <td>${{ cart.goods.gprice|floatformat:2|mul:cart.count }}</td>
-                            <td>
-                                <a href="javascript:;" onclick="delete_cart({{ cart.id }})" class="button">Delete</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                
-                <div style="margin-top: 20px; text-align: right;">
-                    <h4>Total: ${{ total_price|default:"0.00" }}</h4>
-                    <a href="{% url 'fm_order:order' %}" class="button button-primary">Checkout</a>
-                </div>
-                {% else %}
-                <p><em>Your cart is empty.</em></p>
-                <a href="{% url 'fm_goods:index' %}" class="button button-primary">Continue Shopping</a>
-                {% endif %}
-            </div>
-        </div>
-    </article>
-    
-    <script>
-        function delete_cart(cart_id) {
-            if (confirm('Are you sure you want to remove this item?')) {
-                $.get('/cart/delete' + cart_id + '/', function(data) {
-                    if (data.ok == 1) {
-                        window.location.reload();
-                    }
-                });
-            }
+  <div class="row">
+    <div class="offset-by-one ten columns">
+      <h2>Shopping Cart</h2>
+
+      {% if carts %}
+        <section class="cart-items">
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cart in carts %}
+              <tr class="cart-item" id="cart_{{ cart.id }}">
+                <td class="cart-product">
+                  <a href="{% url 'fm_goods:detail' cart.goods.id %}">
+                    <img src="{{ MEDIA_URL }}{{ cart.goods.gpic }}" alt="{{ cart.goods.gtitle }}" class="cart-thumbnail">
+                    {{ cart.goods.gtitle }}
+                  </a>
+                </td>
+                <td class="cart-price">${{ cart.goods.gprice }}</td>
+                <td class="cart-quantity">
+                  <div class="quantity-control">
+                    <a href="javascript:update_cart({{ cart.id }}, -1);" class="button quantity-button">-</a>
+                    <input type="text" value="{{ cart.count }}" class="quantity-input" id="count_{{ cart.id }}" readonly>
+                    <a href="javascript:update_cart({{ cart.id }}, 1);" class="button quantity-button">+</a>
+                  </div>
+                </td>
+                <td class="cart-subtotal" id="subtotal_{{ cart.id }}">${{ cart.goods.gprice|mul:cart.count }}</td>
+                <td class="cart-actions">
+                  <a href="javascript:delete_cart({{ cart.id }});" class="button">Delete</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                <td id="cart_total">${{ total_price }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="cart-actions">
+            <a href="{% url 'fm_goods:index' %}" class="button">Continue Shopping</a>
+            <a href="{% url 'fm_order:order' %}" class="button button-primary">Proceed to Checkout</a>
+          </div>
+        </section>
+      {% else %}
+        <section class="empty-cart">
+          <p>Your shopping cart is empty.</p>
+          <a href="{% url 'fm_goods:index' %}" class="button button-primary">Browse Products</a>
+        </section>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block head %}
+<script type="text/javascript">
+  function update_cart(cart_id, change) {
+    var count_input = $('#count_' + cart_id);
+    var current_count = parseInt(count_input.val());
+    var new_count = current_count + change;
+
+    if (new_count < 1) {
+      new_count = 1;
+    }
+
+    $.get('/cart/update' + cart_id + '_' + new_count + '/', function(data) {
+      if (data.ok == 1) {
+        count_input.val(new_count);
+        $('#subtotal_' + cart_id).text('
+                   + data.subtotal);
+        $('#cart_total').text('
+                   + data.total);
+      }
+    });
+  }
+
+  function delete_cart(cart_id) {
+    if (confirm('Are you sure you want to remove this item from your cart?')) {
+      $.get('/cart/delete' + cart_id + '/', function(data) {
+        if (data.ok == 1) {
+          $('#cart_' + cart_id).remove();
+          $('#cart_total').text('
+                   + data.total);
+
+          if (data.count == 0) {
+            location.reload();
+          }
         }
-    </script>
+      });
+    }
+  }
+</script>
 {% endblock %}

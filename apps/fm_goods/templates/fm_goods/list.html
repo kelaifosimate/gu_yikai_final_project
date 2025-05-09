@@ -1,78 +1,168 @@
-{% extends 'fm_goods/base.html' %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block center_content %}
+{% block title %}{{ typeinfo.ttitle }} - Products{% endblock %}
 
-	<div class="main_wrap clearfix">
-		<div class="l_wrap fl clearfix">
-			<div class="new_goods">
-				<h3>New Recommendations</h3>
-				<ul>
-                    {% for goods in news %}
-{#                        Two new recommended products #}
-                        <li>
-                            <a href="/{{ goods.id }}"><img src="{{ MEDIA_URL }}{{ goods.gpic }}"></a>
-    						<h4><a href="/{{ goods.id }}">{{ goods.gtitle }}</a></h4>
-    						<div class="prize">¥{{ goods.gprice }}</div>
-                        </li>
-                    {% endfor %}
-				</ul>
-			</div>
-		</div>
+{% block content %}
+  <div class="row">
+    <div class="twelve columns">
+      <h2>{{ typeinfo.ttitle }}</h2>
 
-		<div class="r_wrap fr clearfix">
-			<div class="sort_bar">
-{#                Note the parameter order in the view function and also all links in url are string type #}
-                <a href="/list{{ typeinfo.id }}_1_1"
-                   {% if sort == '1' %}
-                    class="active"
-                   {% endif %}
-                    >Default</a>
-                <a href="/list{{ typeinfo.id }}_1_2"
-                   {% if sort == '2' %}
-                    class="active"
-                   {% endif %}
-                    >Price</a>
-                <a href="/list{{ typeinfo.id }}_1_3"
-                   {% if sort == '3' %}
-                    class="active"
-                   {% endif %}
-                    >Popularity</a>
-			</div>
+      <div class="sort_bar">
+        <a href="{% url 'fm_goods:list' typeinfo.id 1 1 %}"
+           {% if sort == '1' %}class="active"{% endif %}>
+          Default
+        </a>
+        <span class="separator">|</span>
+        <a href="{% url 'fm_goods:list' typeinfo.id 1 2 %}"
+           {% if sort == '2' %}class="active"{% endif %}>
+          Price
+        </a>
+        <span class="separator">|</span>
+        <a href="{% url 'fm_goods:list' typeinfo.id 1 3 %}"
+           {% if sort == '3' %}class="active"{% endif %}>
+          Popularity
+        </a>
 
-			<ul class="goods_type_list clearfix">
-                {%  for g in page %}
-                <li>
-					<a href="/detail/{{ g.id }}/"><img src="{{ MEDIA_URL }}{{ g.gpic }}"></a>
-					<h4><a href="/detail/{{ g.id }}/">{{ g.gtitle }}</a></h4>
-					<div class="operate">
-						<span class="prize">¥{{ g.gprice }}</span>
-						<span class="unit">Seller: {{ g.gunit }}</span>
-						<a href="/cart/add{{ g.id }}_1/" class="add_goods" title="Add to Cart"></a>
-					</div>
-				</li>
-                {% endfor %}
-			</ul>
+        <div class="action-buttons">
+          <a href="{% url 'fm_goods:add_product' typeinfo.id %}" class="button button-primary">Add Product</a>
+        </div>
+      </div>
 
-			<div class="pagenation">
-{#                Check if it's the first page #}
-                {% if page.has_previous %}
-                    <a href="/list{{ typeinfo.id }}_{{ page.previous_page_number }}_{{ sort }}">Previous</a>
-                {% endif %}
+      <ul class="product-list">
+        {% for g in page %}
+        <li class="product-list-item">
+          <div class="row">
+            <div class="three columns">
+              <a href="{% url 'fm_goods:detail' g.id %}">
+                <img src="{{ MEDIA_URL }}{{ g.gpic }}" alt="{{ g.gtitle }}" class="product-image">
+              </a>
+            </div>
+            <div class="seven columns">
+              <h4><a href="{% url 'fm_goods:detail' g.id %}">{{ g.gtitle }}</a></h4>
+              <div class="product-info">
+                <span class="price">${{ g.gprice }}</span>
+                <span class="seller">Seller: {{ g.gunit }}</span>
+                <p class="description">{{ g.gjianjie|truncatechars:200 }}</p>
+                <a href="{% url 'fm_cart:add' g.id 1 %}" class="button button-primary add-to-cart">Add to Cart</a>
+              </div>
+            </div>
+            <div class="two columns product-actions">
+              <a href="{% url 'fm_goods:edit_product' g.id %}" class="button edit-button">Edit</a>
+              <a href="{% url 'fm_goods:delete_product' g.id %}" class="button delete-button" onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="empty-list">
+          <p><em>No products available in this category.</em></p>
+          <p><a href="{% url 'fm_goods:add_product' typeinfo.id %}" class="button button-primary">Add Your First Product</a></p>
+        </li>
+        {% endfor %}
+      </ul>
 
-                {% for pindex in paginator.page_range %}
-                    {% if pindex == page.number %}
-                        <a href="/list{{ typeinfo.id }}_{{pindex}}_{{ sort }}" class="active">{{ pindex }}</a>
-                    {% else %}
-                        <a href="/list{{ typeinfo.id }}_{{pindex}}_{{ sort }}">{{ pindex }}</a>
-                    {% endif %}
-                {% endfor %}
+      <div class="pagination">
+        {% if page.has_previous %}
+          <a href="{% url 'fm_goods:list' typeinfo.id page.previous_page_number sort %}" class="button">Previous</a>
+        {% endif %}
 
-{#                Check if there's next page #}
-                {% if page.has_next %}
-				<a href="/list{{ typeinfo.id }}_{{ page.next_page_number }}_{{ sort }}">Next ></a>
-                {% endif %}
-			</div>
-		</div>
-	</div>
+        {% for pindex in paginator.page_range %}
+          {% if pindex == page.number %}
+            <a href="{% url 'fm_goods:list' typeinfo.id pindex sort %}" class="button active">{{ pindex }}</a>
+          {% else %}
+            <a href="{% url 'fm_goods:list' typeinfo.id pindex sort %}" class="button">{{ pindex }}</a>
+          {% endif %}
+        {% endfor %}
 
-{% endblock center_content %}
+        {% if page.has_next %}
+          <a href="{% url 'fm_goods:list' typeinfo.id page.next_page_number sort %}" class="button">Next</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if news %}
+  <div class="row">
+    <div class="twelve columns">
+      <h3>You Might Also Like</h3>
+      <ul class="related-products">
+        {% for goods in news %}
+        <li class="related-product">
+          <a href="{% url 'fm_goods:detail' goods.id %}">
+            <img src="{{ MEDIA_URL }}{{ goods.gpic }}" alt="{{ goods.gtitle }}">
+            <div class="product-title">{{ goods.gtitle }}</div>
+            <div class="product-price">${{ goods.gprice }}</div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+  /* 修改排序按钮的样式 */
+  .sort_bar {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+  }
+
+  .sort_bar a {
+    display: inline-block;
+    margin-right: 5px;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 10px;
+  }
+
+  .sort_bar .separator {
+    margin: 0 5px;
+    color: #ccc;
+  }
+
+  .sort_bar a.active {
+    background-color: #0074d9;
+    color: white;
+    border-radius: 3px;
+  }
+
+  /* 添加产品按钮和操作栏 */
+  .action-buttons {
+    margin-left: auto;
+  }
+
+  .product-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .product-actions .button {
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .edit-button {
+    background-color: #27ae60;
+  }
+
+  .delete-button {
+    background-color: #e74c3c;
+  }
+
+  /* 空列表样式 */
+  .empty-list {
+    text-align: center;
+    padding: 30px;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+  }
+</style>
+{% endblock %}

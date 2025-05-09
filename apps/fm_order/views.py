@@ -1,27 +1,29 @@
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 from decimal import Decimal
 from .models import OrderInfo, OrderDetailInfo
 from apps.fm_cart.models import CartInfo
 from apps.fm_user.models import UserInfo
-from apps.fm_user import user_decorator
+from apps.fm_goods.models import GoodsInfo
+from apps.fm_user.user_decorator import login
 
 
-@user_decorator.login
+@login
 def order(request):
-    uid = request.session['user_id']
+    """Show checkout page"""
+    uid = request.session.get('user_id')
     user = UserInfo.objects.get(id=uid)
 
+    # Get cart items
     carts = CartInfo.objects.filter(user_id=uid)
+    if not carts.exists():
+        return redirect('fm_cart:cart')
 
-    total_price = 0
-    for cart in carts:
-        total_price += float(cart.count) * float(cart.goods.gprice)
-
-    total_price = float('%0.2f' % total_price)
-    shipping_fee = 10  # Fixed shipping fee
+    # Calculate totals
+    total_price = sum(float(cart.goods.gprice) * cart.count for cart in carts)
+    shipping_fee = 10.00  # Fixed shipping fee
     total_with_shipping = total_price + shipping_fee
 
     context = {
@@ -33,96 +35,140 @@ def order(request):
         'total_with_shipping': total_with_shipping,
     }
 
-    return render(request, 'fm_order/place_order.html', context)
+    return render(request, 'fm_order/order.html', context)
 
 
-@user_decorator.login
-@transaction.atomic()
+@login
+@transaction.atomic
 def order_handle(request):
-    uid = request.session['user_id']
+    """Process order submission"""
+    if request.method != 'POST':
+        return JsonResponse({'ok': 0, 'message': 'Invalid request method'})
+
+    uid = request.session.get('user_id')
     user = UserInfo.objects.get(id=uid)
 
-    tran_id = transaction.savepoint()
+    # Check if user has shipping info
+    if not user.ushou or not user.uaddress or not user.uphone:
+        return JsonResponse({'ok': 0, 'message': 'Please complete your shipping information'})
+
+    # Get cart items
+    carts = CartInfo.objects.filter(user_id=uid)
+    if not carts.exists():
+        return JsonResponse({'ok': 0, 'message': 'Your cart is empty'})
+
+    # Create transaction savepoint
+    savepoint = transaction.savepoint()
 
     try:
-        order_info = OrderInfo()
-        now = datetime.now()
-        order_info.oid = '%s%d' % (now.strftime('%Y%m%d%H%M%S'), uid)
-        order_info.odate = now
-        order_info.user_id = uid
-        order_info.ototal = Decimal(request.POST.get('total'))
-        order_info.oaddress = user.uaddress
-        order_info.save()
+        # Create order
+        order = OrderInfo()
+        order.oid = datetime.now().strftime('%Y%m%d%H%M%S') + str(uid)
+        order.user = user
+        order.odate = datetime.now()
+        order.ototal = Decimal(request.POST.get('total', '0'))
+        order.oaddress = user.uaddress
+        order.save()
 
-        carts = CartInfo.objects.filter(user_id=uid)
-
+        # Create order items
         for cart in carts:
-            order_detail = OrderDetailInfo()
-            order_detail.order = order_info
-            goods = cart.goods
+            # Check inventory
+            if cart.count > cart.goods.gkucun:
+                transaction.savepoint_rollback(savepoint)
+                return JsonResponse({'ok': 0, 'message': f'Insufficient inventory for {cart.goods.gtitle}'})
 
-            if cart.count <= goods.gkucun:
-                goods.gkucun -= cart.count
-                goods.save()
+            # Update inventory
+            cart.goods.gkucun -= cart.count
+            cart.goods.save()
 
-                order_detail.goods = goods
-                order_detail.price = goods.gprice
-                order_detail.count = cart.count
-                order_detail.save()
+            # Create order detail
+            detail = OrderDetailInfo()
+            detail.order = order
+            detail.goods = cart.goods
+            detail.price = cart.goods.gprice
+            detail.count = cart.count
+            detail.save()
 
-                cart.delete()
-            else:
-                transaction.savepoint_rollback(tran_id)
-                return JsonResponse({'ok': 0, 'message': 'Insufficient inventory'})
+            # Delete cart item
+            cart.delete()
 
-        transaction.savepoint_commit(tran_id)
+        # Commit transaction
+        transaction.savepoint_commit(savepoint)
         return JsonResponse({'ok': 1})
 
     except Exception as e:
-        transaction.savepoint_rollback(tran_id)
+        # Rollback transaction
+        transaction.savepoint_rollback(savepoint)
         return JsonResponse({'ok': 0, 'message': str(e)})
 
 
-@user_decorator.login
+@login
 def order_list(request, page=1):
-    uid = request.session['user_id']
+    """Show order history"""
+    uid = request.session.get('user_id')
     user = UserInfo.objects.get(id=uid)
 
+    # Get orders
     orders = OrderInfo.objects.filter(user_id=uid).order_by('-odate')
 
+    # Paginate
     from django.core.paginator import Paginator
-    paginator = Paginator(orders, 10)  # 10 orders per page
-    orders_page = paginator.page(page)
+    paginator = Paginator(orders, 5)  # 5 orders per page
+
+    try:
+        page_obj = paginator.page(page)
+    except:
+        page_obj = paginator.page(1)
 
     context = {
         'title': 'Order History',
         'user': user,
-        'orders': orders_page.object_list,
-        'page': orders_page,
+        'orders': page_obj.object_list,
+        'page': page_obj,
         'paginator': paginator,
     }
 
     return render(request, 'fm_order/order_list.html', context)
 
 
-@user_decorator.login
+@login
 def order_detail(request, order_id):
-    uid = request.session['user_id']
+    """Show order details"""
+    uid = request.session.get('user_id')
     user = UserInfo.objects.get(id=uid)
 
-    try:
-        order = OrderInfo.objects.get(oid=order_id, user_id=uid)
-    except OrderInfo.DoesNotExist:
-        return redirect('fm_user:order', 1)
+    # Get order
+    order = get_object_or_404(OrderInfo, oid=order_id, user_id=uid)
 
-    # Get order details
-    details = OrderDetailInfo.objects.filter(order=order)
+    # Get order items
+    order_items = OrderDetailInfo.objects.filter(order=order)
 
     context = {
         'title': 'Order Details',
         'user': user,
         'order': order,
-        'details': details,
+        'order_items': order_items,
     }
 
     return render(request, 'fm_order/order_detail.html', context)
+
+
+@login
+def pay(request, order_id):
+    """Process payment"""
+    if request.method != 'POST':
+        return JsonResponse({'ok': 0, 'message': 'Invalid request method'})
+
+    uid = request.session.get('user_id')
+
+    # Get order
+    try:
+        order = OrderInfo.objects.get(oid=order_id, user_id=uid)
+
+        # Update order status
+        order.oIsPay = True
+        order.save()
+
+        return JsonResponse({'ok': 1})
+    except OrderInfo.DoesNotExist:
+        return JsonResponse({'ok': 0, 'message': 'Order not found'})

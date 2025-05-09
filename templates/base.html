@@ -6,17 +6,14 @@
     <meta charset="UTF-8">
     <title>
         {% block title %}
-            title is provided by inheriting templates
+            Flea Market
         {% endblock %}
     </title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css"
-          href="{% static 'courseinfo/normalize.css' %}">
-    <link rel="stylesheet" type="text/css"
-          href="{% static 'courseinfo/skeleton.css' %}">
-    <link rel="stylesheet" type="text/css"
-          href="{% static 'courseinfo/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/normalize.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/skeleton.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     {% block head %}{% endblock %}
 </head>
 
@@ -26,9 +23,9 @@
     <div class="status row">
         <div class="offset-by-eight four columns">
             <ul class="inline">
-                {% if user.is_authenticated %}
+                {% if request.session.user_name|default:'' != '' %}
                     <li><a href="{% url 'fm_user:logout' %}">
-                        Log Out, {{ user.uname }}</a></li>
+                        Log Out, {{ request.session.user_name }}</a></li>
                 {% else %}
                     <li><a href="{% url 'fm_user:login' %}">
                         Log In</a></li>
@@ -44,11 +41,15 @@
     </header>
     <nav>
         <ul>
-            <li><a href="{% url 'fm_goods:index' %}">Home</a></li>
-            {% if request.session.user_id %}
+            {% if request.session.user_name|default:'' != '' %}
+                <li><a href="{% url 'fm_goods:index' %}">Home</a></li>
+                <li><a href="{% url 'fm_goods:list' 1 1 1 %}">Products</a></li>
                 <li><a href="{% url 'fm_user:info' %}">User Center</a></li>
                 <li><a href="{% url 'fm_cart:cart' %}">Shopping Cart</a></li>
                 <li><a href="{% url 'fm_user:order' 1 %}">Orders</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+            {% else %}
+                <li><a href="{% url 'about' %}">About</a></li>
             {% endif %}
         </ul>
     </nav>
@@ -114,15 +115,14 @@
         <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
             <img alt="Creative Commons License" style="border-width:0"
                  src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png"/>
-        </a><br/><span property="dct:title">Flea Market</span>
+        </a><br/><span property="dct:title">Flea Market Tutorial Examples and Code</span>
         by
         <a property="cc:attributionName"
-           rel="cc:attributionURL">Your Name</a> is licensed under a
+           rel="cc:attributionURL">Your Name</a> are licensed under a
         <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike
             4.0 International License</a>.
     </p>
 </footer>
 
 </body>
-
 </html>

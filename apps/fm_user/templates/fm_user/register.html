@@ -1,28 +1,95 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Register{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+<script type="text/javascript">
+$(function(){
+  // 用户名验证
+  $('#user_name').blur(function(){
+    if($(this).val() == '') {
+      $('#user_name_notice').html('Username cannot be empty').show();
+    } else {
+      $.get('/user/register_exist/?uname='+$(this).val(), function(data){
+        if(data.count >= 1) {
+          $('#user_name_notice').html('Username already exists').show();
+        } else {
+          $('#user_name_notice').hide();
+        }
+      });
+    }
+  });
+
+  // 密码验证
+  $('#pwd').blur(function(){
+    if($(this).val() == '') {
+      $('#pwd_notice').html('Password cannot be empty').show();
+    } else if($(this).val().length < 6) {
+      $('#pwd_notice').html('Password must be at least 6 characters').show();
+    } else {
+      $('#pwd_notice').hide();
+    }
+  });
+
+  // 密码确认验证
+  $('#confirm_pwd').blur(function(){
+    if($(this).val() != $('#pwd').val()) {
+      $('#confirm_pwd_notice').html('Passwords do not match').show();
+    } else {
+      $('#confirm_pwd_notice').hide();
+    }
+  });
+
+  // 表单提交验证
+  $('form').submit(function(){
+    if($('#user_name').val() == '') {
+      $('#user_name_notice').html('Username cannot be empty').show();
+      return false;
+    }
+    if($('#pwd').val() == '') {
+      $('#pwd_notice').html('Password cannot be empty').show();
+      return false;
+    }
+    if($('#confirm_pwd').val() != $('#pwd').val()) {
+      $('#confirm_pwd_notice').html('Passwords do not match').show();
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+{% endblock %}
 
 {% block content %}
-  <h2>Login</h2>
-  <form method="post" action="{% url 'fm_user:login_handle' %}">
-    {% csrf_token %}
-    <p>
-      <label for="username">Username:</label>
-      <input type="text" name="username" id="username" value="{{ username }}">
-    </p>
-    <p>
-      <label for="pwd">Password:</label>
-      <input type="password" name="pwd" id="pwd" value="{{ password }}">
-    </p>
-    <p>
-      <input type="checkbox" name="jizhu" id="jizhu" value="1" checked="checked">
-      <label for="jizhu">Remember username</label>
-    </p>
-    <button type="submit" class="button button-primary">
-      Login
-    </button>
-    <p>
-      <a href="{% url 'fm_user:register' %}">Register Now</a>
-    </p>
-  </form>
+  <div class="row">
+    <div class="offset-by-three six columns">
+      <h2>Register</h2>
+      <form method="post" action="{% url 'fm_user:register_handle' %}">
+        {% csrf_token %}
+        <p>
+          <label for="user_name">Username:</label>
+          <input type="text" name="user_name" id="user_name">
+          <span id="user_name_notice" class="error_tip" style="display:none"></span>
+        </p>
+        <p>
+          <label for="pwd">Password:</label>
+          <input type="password" name="pwd" id="pwd">
+          <span id="pwd_notice" class="error_tip" style="display:none"></span>
+        </p>
+        <p>
+          <label for="confirm_pwd">Confirm Password:</label>
+          <input type="password" name="confirm_pwd" id="confirm_pwd">
+          <span id="confirm_pwd_notice" class="error_tip" style="display:none"></span>
+        </p>
+        <button type="submit" class="button button-primary">
+          Register
+        </button>
+        <p>
+          Already have an account? <a href="{% url 'fm_user:login' %}">Login here</a>
+        </p>
+      </form>
+    </div>
+  </div>
 {% endblock %}

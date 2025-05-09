@@ -1,61 +1,57 @@
-{% extends 'fm_goods/base.html' %}
+{% extends 'base.html' %}
+
+{% block title %}Flea Market - Home{% endblock %}
 
 {% block content %}
-    <article>
-        <div class="row">
-            <div class="twelve columns">
-                <h2>Product Categories</h2>
-                <ul>
-                    <li><a href="/detail/1/">Books</a></li>
-                    <li><a href="/detail/2/">Electronics</a></li>
-                    <li><a href="/detail/3/">Clothing</a></li>
-                    <li><a href="/detail/4/">Transportation</a></li>
-                    <li><a href="/detail/5/">Instruments</a></li>
-                    <li><a href="/detail/6/">Smart Devices</a></li>
-                </ul>
-            </div>
-        </div>
+  <div class="row">
+    <div class="twelve columns">
+      <h2>Product Categories</h2>
+      <ul class="category-list">
+        <li><a href="{% url 'fm_goods:list' 1 1 1 %}">Books</a></li>
+        <li><a href="{% url 'fm_goods:list' 2 1 1 %}">Electronics</a></li>
+        <li><a href="{% url 'fm_goods:list' 3 1 1 %}">Clothing</a></li>
+        <li><a href="{% url 'fm_goods:list' 4 1 1 %}">Transportation</a></li>
+        <li><a href="{% url 'fm_goods:list' 5 1 1 %}">Instruments</a></li>
+        <li><a href="{% url 'fm_goods:list' 6 1 1 %}">Smart Devices</a></li>
+      </ul>
+    </div>
+  </div>
 
-        <div class="row">
-            <div class="twelve columns">
-                <h3>New Items</h3>
-                <ul class="inline">
-                    {% for goods in type0 %}
-                    <li style="margin-right: 20px; margin-bottom: 20px; display: inline-block;">
-                        <a href="/detail/{{ goods.id }}/">
-                            <img src="{{ MEDIA_URL }}{{ goods.gpic }}" style="width: 150px; height: 150px; object-fit: cover;">
-                            <br>
-                            {{ goods.gtitle }}
-                            <br>
-                            ${{ goods.gprice }}
-                        </a>
-                    </li>
-                    {% empty %}
-                    <li><em>No products available.</em></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+  <div class="row">
+    <div class="twelve columns">
+      <h3>New Items</h3>
+      <ul class="product-grid">
+        {% for goods in type0 %}
+        <li class="product-item">
+          <a href="{% url 'fm_goods:detail' goods.id %}">
+            <img src="{{ MEDIA_URL }}{{ goods.gpic }}" alt="{{ goods.gtitle }}">
+            <div class="product-title">{{ goods.gtitle }}</div>
+            <div class="product-price">${{ goods.gprice }}</div>
+          </a>
+        </li>
+        {% empty %}
+        <li><em>No new products available.</em></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 
-        <div class="row">
-            <div class="twelve columns">
-                <h3>Popular Items</h3>
-                <ul class="inline">
-                    {% for goods in type01 %}
-                    <li style="margin-right: 20px; margin-bottom: 20px; display: inline-block;">
-                        <a href="/detail/{{ goods.id }}/">
-                            <img src="{{ MEDIA_URL }}{{ goods.gpic }}" style="width: 150px; height: 150px; object-fit: cover;">
-                            <br>
-                            {{ goods.gtitle }}
-                            <br>
-                            ${{ goods.gprice }}
-                        </a>
-                    </li>
-                    {% empty %}
-                    <li><em>No products available.</em></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </article>
+  <div class="row">
+    <div class="twelve columns">
+      <h3>Popular Items</h3>
+      <ul class="product-grid">
+        {% for goods in type01 %}
+        <li class="product-item">
+          <a href="{% url 'fm_goods:detail' goods.id %}">
+            <img src="{{ MEDIA_URL }}{{ goods.gpic }}" alt="{{ goods.gtitle }}">
+            <div class="product-title">{{ goods.gtitle }}</div>
+            <div class="product-price">${{ goods.gprice }}</div>
+          </a>
+        </li>
+        {% empty %}
+        <li><em>No popular products available.</em></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 {% endblock %}

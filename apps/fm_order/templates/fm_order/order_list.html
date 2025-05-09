@@ -1,64 +1,69 @@
 {% extends 'base.html' %}
 
+{% block title %}Order History{% endblock %}
+
 {% block content %}
-<article>
-    <div class="row">
-        <div class="offset-by-two eight columns">
-            <h2>Order History</h2>
-            
-            {% if orders %}
-            <section>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Order Number</th>
-                            <th>Date</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                        <tr>
-                            <td>{{ order.oid }}</td>
-                            <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
-                            <td>${{ order.ototal }}</td>
-                            <td>
-                                {% if order.oIsPay %}
-                                <span class="status-paid">Paid</span>
-                                {% else %}
-                                <span class="status-unpaid">Unpaid</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'fm_order:detail' order.oid %}" class="button">View Details</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-            
-            {% if paginator.num_pages > 1 %}
-            <div class="pagination">
-                {% if page.has_previous %}
-                    <a href="{% url 'fm_order:list' page.previous_page_number %}" class="button">Previous</a>
-                {% endif %}
-                
-                <span>Page {{ page.number }} of {{ paginator.num_pages }}</span>
-                
-                {% if page.has_next %}
-                    <a href="{% url 'fm_order:list' page.next_page_number %}" class="button">Next</a>
-                {% endif %}
-            </div>
+  <div class="row">
+    <div class="offset-by-one ten columns">
+      <h2>Order History</h2>
+
+      {% if orders %}
+        <section class="order-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+              <tr>
+                <td>{{ order.oid }}</td>
+                <td>{{ order.odate|date:"Y-m-d H:i" }}</td>
+                <td>${{ order.ototal }}</td>
+                <td>
+                  {% if order.oIsPay %}
+                  <span class="status-paid">Paid</span>
+                  {% else %}
+                  <span class="status-unpaid">Unpaid</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'fm_order:detail' order.oid %}" class="button">View Details</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            {% if page.has_previous %}
+              <a href="{% url 'fm_user:order' page.previous_page_number %}" class="button">Previous</a>
             {% endif %}
-            
-            {% else %}
-            <p><em>You have no orders yet.</em></p>
-            <a href="{% url 'fm_goods:index' %}" class="button button-primary">Continue Shopping</a>
+
+            {% for pindex in paginator.page_range %}
+              {% if pindex == page.number %}
+                <a href="{% url 'fm_user:order' pindex %}" class="button active">{{ pindex }}</a>
+              {% else %}
+                <a href="{% url 'fm_user:order' pindex %}" class="button">{{ pindex }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if page.has_next %}
+              <a href="{% url 'fm_user:order' page.next_page_number %}" class="button">Next</a>
             {% endif %}
-        </div>
+          </div>
+        </section>
+      {% else %}
+        <section class="empty-orders">
+          <p>You have no orders yet.</p>
+          <a href="{% url 'fm_goods:index' %}" class="button button-primary">Browse Products</a>
+        </section>
+      {% endif %}
     </div>
-</article>
+  </div>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Product{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="offset-by-two eight columns">
+    <h2>Delete Product</h2>
+    
+    <form method="post" action="{% url 'fm_goods:delete_product_handle' product.id %}">
+      {% csrf_token %}
+      <p>Are you sure you want to delete "{{ product.gtitle }}"?</p>
+      
+      <button type="submit" class="button delete-button">Delete Product</button>
+      <a href="javascript:history.back()" class="button">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
