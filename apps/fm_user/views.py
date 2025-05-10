@@ -82,7 +82,6 @@ def login_handle(request):
             }
             return render(request, 'fm_user/login.html', context)
     except UserInfo.DoesNotExist:
-        # Username not found
         context = {
             'title': 'Login',
             'error_name': 1,
