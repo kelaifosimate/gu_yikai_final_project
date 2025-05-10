@@ -54,6 +54,24 @@ def login_handle(request):
     upwd = request.POST.get('pwd')
     jizhu = request.POST.get('jizhu', 0)
 
+    from django.contrib.auth import authenticate, login as auth_login
+    from django.contrib.auth.models import User
+
+    django_user = authenticate(username=uname, password=upwd)
+    if django_user is not None:
+        auth_login(request, django_user)
+        url = request.COOKIES.get('url', '/')
+        red = redirect(url)
+
+        if jizhu != 0:
+            red.set_cookie('uname', uname)
+        else:
+            red.set_cookie('uname', '', max_age=-1)
+
+        request.session['user_id'] = django_user.id
+        request.session['user_name'] = uname
+        return red
+
     try:
         user = UserInfo.objects.get(uname=uname)
 
@@ -72,7 +90,6 @@ def login_handle(request):
             request.session['user_name'] = uname
             return red
         else:
-            # Password incorrect
             context = {
                 'title': 'Login',
                 'error_name': 0,
