@@ -8,7 +8,7 @@
     <div class="twelve columns">
       <h2>Products</h2>
 
-      <div class="sort_bar">
+      <div class="sort-links">
         <a href="{% url 'fm_goods:list' %}?sort=default"
            {% if request.GET.sort == 'default' or not request.GET.sort %}class="active"{% endif %}>
           Default
@@ -29,39 +29,35 @@
         </div>
       </div>
 
-      <ul class="product-list">
+      <div class="product-grid">
         {% for product in goods_list %}
-        <li class="product-list-item">
-          <div class="row">
-            <div class="three columns">
-              <a href="{% url 'fm_goods:detail' product.id %}">
-                <img src="{{ MEDIA_URL }}{{ product.gpic }}" alt="{{ product.gtitle }}" class="product-image">
-              </a>
-            </div>
-            <div class="seven columns">
-              <h4><a href="{% url 'fm_goods:detail' product.id %}">{{ product.gtitle }}</a></h4>
-              <div class="product-info">
-                <span class="price">${{ product.gprice }}</span>
-                <span class="seller">Seller: {{ product.gunit }}</span>
-                <p class="description">{{ product.gjianjie|truncatechars:200 }}</p>
-                <a href="{% url 'fm_cart:add' product.id 1 %}" class="button button-primary add-to-cart">Add to Cart</a>
-              </div>
-            </div>
-            {% if product.gunit == request.session.user_name %}
-            <div class="two columns product-actions">
-              <a href="{% url 'fm_goods:edit_product' product.id %}" class="button edit-button">Edit</a>
-              <a href="{% url 'fm_goods:delete_product' product.id %}" class="button delete-button" onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>
-            </div>
-            {% endif %}
+        <div class="product-card">
+          {% if product.gunit == request.session.user_name %}
+          <div class="product-manage">
+            <a href="{% url 'fm_goods:edit_product' product.id %}" class="edit-button">Edit</a>
+            <a href="{% url 'fm_goods:delete_product' product.id %}" class="delete-button">Delete</a>
           </div>
-        </li>
+          {% endif %}
+
+          <h3 class="product-title">
+            <a href="{% url 'fm_goods:detail' product.id %}">{{ product.gtitle }}</a>
+          </h3>
+
+          <div class="product-price">${{ product.gprice }}</div>
+          <div class="seller-info">Seller: {{ product.gunit }}</div>
+          <div class="product-description">{{ product.gjianjie|truncatechars:100 }}</div>
+
+          <div class="product-actions">
+            <a href="{% url 'fm_cart:add' product.id 1 %}" class="add-to-cart button">Add to Cart</a>
+          </div>
+        </div>
         {% empty %}
-        <li class="empty-list">
+        <div class="empty-list">
           <p><em>No products available.</em></p>
           <p><a href="{% url 'fm_goods:add_product' %}" class="button button-primary">Add Your First Product</a></p>
-        </li>
+        </div>
         {% endfor %}
-      </ul>
+      </div>
 
       {% if is_paginated %}
       <div class="pagination">

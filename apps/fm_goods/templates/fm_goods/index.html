@@ -6,7 +6,7 @@
   <div class="row">
     <div class="twelve columns">
       <section class="search-section">
-        <form action="{% url 'fm_goods:search' %}" method="get">
+        <form action="{% url 'fm_goods:search' %}" method="get" class="search-form">
           <div class="search-bar">
             <input type="text" name="q" placeholder="Search for products..." required>
             <button type="submit" class="button button-primary">Search</button>
@@ -18,46 +18,64 @@
 
   <div class="row">
     <div class="twelve columns">
-      <h3>New Items</h3>
-      <ul class="product-grid">
-        {% for product in newest_products %}
-        <li class="product-item">
-          <a href="{% url 'fm_goods:detail' product.id %}">
-            <img src="{{ MEDIA_URL }}{{ product.gpic }}" alt="{{ product.gtitle }}">
-            <div class="product-title">{{ product.gtitle }}</div>
+      <section class="featured-section">
+        <h2 class="section-title">New Items</h2>
+        <div class="product-cards">
+          {% for product in newest_products %}
+          <div class="product-card">
+            <h3 class="product-title">
+              <a href="{% url 'fm_goods:detail' product.id %}">{{ product.gtitle }}</a>
+            </h3>
             <div class="product-price">${{ product.gprice }}</div>
-          </a>
-        </li>
-        {% empty %}
-        <li><em>No new products available.</em></li>
-        {% endfor %}
-      </ul>
+            <div class="product-seller">Seller: {{ product.gunit }}</div>
+            <div class="product-description">{{ product.gjianjie|truncatechars:100 }}</div>
+            <div class="product-actions">
+              <a href="{% url 'fm_cart:add' product.id 1 %}" class="add-to-cart button">Add to Cart</a>
+              <a href="{% url 'fm_goods:detail' product.id %}" class="view-details button">View Details</a>
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-list">
+            <p><em>No new products available.</em></p>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
     </div>
   </div>
 
   <div class="row">
     <div class="twelve columns">
-      <h3>Popular Items</h3>
-      <ul class="product-grid">
-        {% for product in popular_products %}
-        <li class="product-item">
-          <a href="{% url 'fm_goods:detail' product.id %}">
-            <img src="{{ MEDIA_URL }}{{ product.gpic }}" alt="{{ product.gtitle }}">
-            <div class="product-title">{{ product.gtitle }}</div>
+      <section class="featured-section">
+        <h2 class="section-title">Popular Items</h2>
+        <div class="product-cards">
+          {% for product in popular_products %}
+          <div class="product-card">
+            <h3 class="product-title">
+              <a href="{% url 'fm_goods:detail' product.id %}">{{ product.gtitle }}</a>
+            </h3>
             <div class="product-price">${{ product.gprice }}</div>
-          </a>
-        </li>
-        {% empty %}
-        <li><em>No popular products available.</em></li>
-        {% endfor %}
-      </ul>
+            <div class="product-seller">Seller: {{ product.gunit }}</div>
+            <div class="product-description">{{ product.gjianjie|truncatechars:100 }}</div>
+            <div class="product-actions">
+              <a href="{% url 'fm_cart:add' product.id 1 %}" class="add-to-cart button">Add to Cart</a>
+              <a href="{% url 'fm_goods:detail' product.id %}" class="view-details button">View Details</a>
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-list">
+            <p><em>No popular products available.</em></p>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
     </div>
   </div>
 
   {% if request.session.user_name %}
   <div class="row">
     <div class="twelve columns text-center">
-      <a href="{% url 'fm_goods:add_product' %}" class="button button-primary">Add New Product</a>
+      <a href="{% url 'fm_goods:add_product' %}" class="add-product-button">Add New Product</a>
     </div>
   </div>
   {% endif %}

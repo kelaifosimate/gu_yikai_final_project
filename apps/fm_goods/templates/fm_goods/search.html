@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="twelve columns">
+      <h2>Search Results for "{{ query }}"</h2>
+
+      <section class="search-section">
+        <form action="{% url 'fm_goods:search' %}" method="get" class="search-form">
+          <div class="search-bar">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search for products..." required>
+            <button type="submit" class="button button-primary">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="search-results">
+        {% if page %}
+          <div class="product-cards">
+            {% for product in page %}
+            <div class="product-card">
+              {% if product.gunit == request.session.user_name %}
+              <div class="product-manage">
+                <a href="{% url 'fm_goods:edit_product' product.id %}" class="edit-button">Edit</a>
+                <a href="{% url 'fm_goods:delete_product' product.id %}" class="delete-button">Delete</a>
+              </div>
+              {% endif %}
+              
+              <h3 class="product-title">
+                <a href="{% url 'fm_goods:detail' product.id %}">{{ product.gtitle }}</a>
+              </h3>
+              
+              <div class="product-price">${{ product.gprice }}</div>
+              <div class="product-seller">Seller: {{ product.gunit }}</div>
+              <div class="product-description">{{ product.gjianjie|truncatechars:100 }}</div>
+              
+              <div class="product-actions">
+                <a href="{% url 'fm_cart:add' product.id 1 %}" class="add-to-cart button">Add to Cart</a>
+                <a href="{% url 'fm_goods:detail' product.id %}" class="view-details button">View Details</a>
+              </div>
+            </div>
+            {% empty %}
+            <div class="empty-search">
+              <p>No products found matching "{{ query }}".</p>
+              <a href="{% url 'fm_goods:index' %}" class="button">Back to Home</a>
+            </div>
+            {% endfor %}
+          </div>
+
+          {% if paginator %}
+          <div class="pagination">
+            {% if page.has_previous %}
+              <a href="{% url 'fm_goods:search' %}?q={{ query }}&amp;page={{ page.previous_page_number }}" class="button">Previous</a>
+            {% endif %}
+
+            {% for pindex in paginator.page_range %}
+              {% if pindex == page.number %}
+                <a href="#" class="button active">{{ pindex }}</a>
+              {% else %}
+                <a href="{% url 'fm_goods:search' %}?q={{ query }}&amp;page={{ pindex }}" class="button">{{ pindex }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if page.has_next %}
+              <a href="{% url 'fm_goods:search' %}?q={{ query }}&amp;page={{ page.next_page_number }}" class="button">Next</a>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="empty-search">
+            <p>No search results. Try different keywords or browse all products.</p>
+            <a href="{% url 'fm_goods:list' %}" class="button button-primary">Browse All Products</a>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}
